@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テンプレ</title>
+<style>
+/* ★ ページ自体をスクロールさせない（浮かない） */
+html, body{
+  height:100%;
+  overflow:hidden;
+}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:#fff;
+  color:#111;
+}
+
+/* ヘッダー固定（ここは好みで） */
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  border-bottom:1px solid #eee;
+  position:sticky;
+  top:0;
+  z-index:400;
+  background:#fff;
+}
+h1{margin:0;font-size:18px;}
+.small{font-size:12px;opacity:.75;}
+
+/* ★ mainを「画面内スクロール領域」にする（ページ全体は固定） */
+main{
+  position:relative;
+  height:calc(100vh - 60px);
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.join-box{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:12px;}
+.join-box input{padding:8px;border:1px solid #ddd;border-radius:6px;font-size:16px;}
+.btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#f8f8f8;cursor:pointer;}
+.btn.primary{background:#111;color:#fff;border-color:#111;}
+.btn.ghost{ background:#111;color:#fff;border-color:#111; }
+.hidden{display:none;}
+#lobby{padding:20px;border-top:1px solid #eee;}
+.copy-btn.copied, .btn.ghost.copied{background:#16a34a;color:#fff;border-color:#16a34a;}
+
+/* 席ポップ */
+.seat-pop{
+  position:fixed;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  background:orange;
+  border:1px solid #eee;
+  border-radius:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.12);
+  padding:10px;
+  z-index:220;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:280px;
+}
+.seat-pop.hidden{display:none;}
+.seat-pop .row{display:flex;gap:8px;align-items:center;}
+.seat-pop label{width:84px;font-size:13px;}
+.seat-pop .tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.tab{
+  padding:6px 10px;
+  border:1px solid #ddd;
+  border-radius:999px;
+  cursor:pointer;
+  user-select:none;
+  position:relative;
+}
+.tab.disabled::after{
+  content:'✕';
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  font-weight:700;
+  color:#b91c1c;
+  pointer-events:none;
+}
+.tab.active{background:#111;color:#fff;border-color:#111;}
+.bottom-pop .btn{
+  background:#fff;
+  color:#111;
+  border-color:#111;
+}
+
+/* primaryの黒背景を上書き（念のため） */
+.bottom-pop .btn.primary{
+  background:#fff;
+  color:#111;
+  border-color:#111;
+}
+
+/* ★ プレイヤー円配置用 */
+.player-circle{
+  position:relative;
+  width:260px;
+  height:260px;
+  margin:20px auto 0;
+  border-radius:50%;
+  border:none;
+  box-sizing:border-box;
+}
+.player-circle::before{ content:''; }
+
+.player-tag{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  padding:4px 8px;
+  border-radius:999px;
+  background:#f8f8f8;
+  border:1px solid #ddd;
+  font-size:12px;
+  white-space:nowrap;
+}
+.player-tag.me{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+
+/* 他プレイヤーのミニカード（基本） */
+.player-tag .mini-hand{
+  position:absolute;
+  left:50%;
+  top:100%;
+  transform:translate(-50%,3px);
+  width:60px;
+  height:30px;
+  pointer-events:none;
+}
+.player-tag .mini-card{
+  position:absolute;
+  left:50%;
+  top:0;
+  width:16px;
+  height:22px;
+  border-radius:4px;
+  border:1px solid #bbb;
+  background:linear-gradient(135deg,#e5e7eb,#cbd5f5);
+  font-size:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-origin:bottom center;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+}
+
+/* ★ マスターのミニカード位置調整（左右2枚） */
+.player-tag.is-master .mini-hand{
+  width:70px;
+}
+/* 左側：mayor.jpg 用 */
+.player-tag.is-master .mini-hand .mini-card.mayor-mini{
+  left:30%;
+}
+/* 右側：役職ミニカード用 */
+.player-tag.is-master .mini-hand .mini-card.role-mini{
+  left:70%;
+}
+
+/* 自分の手札 */
+.my-hand-wrapper{ margin-top:16px;text-align:center; }
+.my-hand-title{ display:none; }
+.my-hand{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:6px;
+  min-height:100px;
+}
+
+/* ▼ 正体カード（自分） */
+.my-card{
+  width:60px;
+  height:90px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:600;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+
+/* ★ 正体カードを画像にする */
+.my-card.role-card{
+  position:relative;
+  overflow:hidden;
+  padding:0;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  color:transparent;
+  text-shadow:none;
+}
+
+/* 追い出し確認 */
+.dialog-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:300;
+}
+.dialog-backdrop.hidden{ display:none; }
+.dialog-box{
+  background:#fff;
+  border-radius:12px;
+  padding:16px 18px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  max-width:320px;
+  width:calc(100% - 40px);
+}
+.dialog-box p{ margin:0 0 12px;font-size:14px;line-height:1.6; }
+.dialog-buttons{ display:flex;justify-content:flex-end;gap:8px; }
+
+/* ホスト設定ボタン */
+.host-settings-btn{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:1px solid #ddd;
+  background:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  cursor:pointer;
+  z-index:230;
+}
+.host-settings-btn.visible{ display:flex; }
+
+/* スタートポップ */
+.start-pop{
+  position:fixed;
+  right:16px;
+  bottom:72px;
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.16);
+  padding:10px 12px;
+  z-index:240;
+  min-width:240px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.start-pop.hidden{ display:none; }
+.start-pop-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+.start-pop-title{ font-size:14px;font-weight:600; }
+.start-pop-main{ font-size:13px;line-height:1.5; }
+.start-pop-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:4px;
+}
+
+/* ロビー中央配置 */
+#roomInfoLobby,#lobby h2,#lobby p{ display:none; }
+#lobby.entered{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:calc(100vh - 60px);
+}
+
+/* マスターポップ */
+.master-pop{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  border-radius:12px;
+  padding:16px 18px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  z-index:260;
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.master-pop.hidden{ display:none; }
+.master-pop-title{ font-size:14px;font-weight:600; }
+.master-pop-choices{ display:flex;flex-direction:column;gap:8px; }
+.master-pop-choices .btn{ width:100%;text-align:center; }
+
+/* タイマー：main内絶対配置 */
+.timer-wrapper{
+  position:absolute;
+  right:16px;
+  top:8px;
+  z-index:250;
+}
+.timer-wrapper.hidden{ display:none; }
+.timer-circle{
+  position:relative;
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      #111 0deg 2deg,
+      transparent 2deg 45deg
+    );
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.timer-circle::after{
+  content:'';
+  position:absolute;
+  inset:8px;
+  border-radius:50%;
+  background:#fff;
+  z-index:0;
+}
+#timerText{
+  position:relative;
+  font-size:16px;
+  font-weight:700;
+  color:#111;
+  z-index:1;
+}
+
+/* =========================
+   ★ お題ボード
+   ========================= */
+.topic-board{
+  position:absolute;
+  left:50%;
+  top:290px;
+  transform:translateX(-50%);
+  z-index:10;
+  width:140px;
+  height:80px;
+  pointer-events:none;
+}
+.topic-board.hidden{ display:none; }
+
+.topic-board-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:10px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  overflow:hidden;
+  display:flex;
+}
+
+/* 権限あり：二重線枠 */
+.topic-board-inner.white{
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+  border:3px solid #111;
+  position:relative;
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+}
+.topic-board-inner.white::before{
+  content:'';
+  position:absolute;
+  inset:2px;
+  border-radius:5px;
+  border:2px solid #111;
+  pointer-events:none;
+  background:transparent;
+}
+
+/* 権限なし：茶 */
+.topic-board-inner.brown{
+  background:linear-gradient(135deg,#8b5a2b,#6f3f1d);
+  border:4px solid rgba(255,255,255,.18);
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+}
+
+/* 中の板 */
+.topic-board-panel{
+  position:relative;
+  border-radius:10px;
+  padding:0;
+  width:100%;
+  height:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+}
+.topic-board-inner.brown .topic-board-panel{
+  background:rgba(0,0,0,.08);
+}
+
+/* 文字：自動縮小 */
+.topic-board-text{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:.06em;
+  color:#111;
+  text-align:center;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+
+  padding:10px 12px;
+  box-sizing:border-box;
+
+  line-height:1.12;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+/* =========================
+   ★ マスター用：正解!! 丸ボタン
+   ========================= */
+.correct-btn{
+  position:fixed;
+  left:50%;
+  bottom:16px;
+  transform:translateX(-50%);
+  width:84px;
+  height:84px;
+  border-radius:50%;
+  border:2px solid #111;
+  background:#fff;
+  color:#111;
+  font-size:16px;
+  font-weight:900;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+  cursor:pointer;
+  z-index:270;
+}
+.correct-btn:active{ transform:translateX(-50%) scale(.98); }
+
+/* =========================
+   ★ 下部黒ポップ（黒背景白字）
+   ========================= */
+.bottom-pop{
+  position:fixed;
+  left:50%;
+  bottom:16px;
+  transform:translateX(-50%);
+  background:#111;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  padding:12px 14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  z-index:999;
+  min-width:280px;
+  max-width:min(520px, calc(100vw - 24px));
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.bottom-pop.hidden{ display:none; }
+.bottom-pop-text{ font-size:14px; font-weight:700; line-height:1.45; }
+.bottom-pop-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+.bottom-pop-actions.hidden{ display:none; }
+
+/* =========================
+   ★ ミニカード：公開状態（1.3倍）
+   ========================= */
+.player-tag .mini-card.revealed{
+  width: calc(16px * 1.6);
+  height: calc(22px * 1.6);
+  border-radius:6px;
+  border:1px solid rgba(0,0,0,.25);
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+}
+
+/* =========================
+   ★ 画面中央の拡大カード + 揺れ2秒
+   ========================= */
+.center-reveal{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.18);
+  z-index:1000;
+  pointer-events:none;
+}
+.center-reveal.hidden{ display:none; }
+.center-reveal-card{
+  width:220px;
+  height:330px;
+  border-radius:16px;
+  border:1px solid rgba(0,0,0,.18);
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  box-shadow:0 28px 70px rgba(0,0,0,.35);
+  animation:quickShake 2s ease-in-out both;
+}
+@keyframes quickShake{
+  0%{ transform:translateY(0) rotate(0deg) scale(1); }
+  10%{ transform:translateY(-2px) rotate(-2deg) scale(1.02); }
+  20%{ transform:translateY(2px) rotate(2deg) scale(1.02); }
+  35%{ transform:translateY(-2px) rotate(-1.5deg) scale(1.02); }
+  50%{ transform:translateY(2px) rotate(1.5deg) scale(1.02); }
+  70%{ transform:translateY(-1px) rotate(-1deg) scale(1.01); }
+  85%{ transform:translateY(1px) rotate(1deg) scale(1.01); }
+  100%{ transform:translateY(0) rotate(0deg) scale(1); }
+}
+
+/* ★ ギリギリポップ用：中央表示＋白背景黒文字 */
+.bottom-pop.giri{
+  top:50%;
+  bottom:auto;
+  transform:translate(-50%, -50%);
+  background:#fff;
+  color:#111;
+  border:1px solid #111;
+}
+
+/* =========================
+   ★ TIME UP! ポップ（中央まで流れる：中央基準）
+   ========================= */
+.timeup-pop{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-160%,-50%);  /* 開始：左画面外 */
+  padding:14px 32px;
+  border-radius:999px;
+  background:#111;
+  color:#fff;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  z-index:2147483647;
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0;
+}
+.timeup-pop.show{
+  animation:timeupSlide 1.6s cubic-bezier(.22,.84,.44,1) both;
+}
+@keyframes timeupSlide{
+  0%{
+    transform:translate(-160%,-50%);
+    opacity:0;
+  }
+  30%{
+    transform:translate(-50%,-50%); /* ★ 中央 */
+    opacity:1;
+  }
+  60%{
+    transform:translate(-50%,-50%); /* ★ 少し止まる */
+    opacity:1;
+  }
+  100%{
+    transform:translate(160%,-50%); /* 右へ抜ける */
+    opacity:0;
+  }
+}
+
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>テンプレ</h1>
+  <div style="display:flex;align-items:center;gap:6px;">
+    <div class="small" id="roomInfo"></div>
+    <button class="btn ghost" id="copyLinkBtn">リンクコピー</button>
+  </div>
+</header>
+
+<main>
+  <div id="timerBox" class="timer-wrapper hidden">
+    <div class="timer-circle">
+      <div id="timerText">4:00</div>
+    </div>
+  </div>
+
+  <!-- ★ お題ボード -->
+  <div id="topicBoard" class="topic-board hidden">
+    <div id="topicBoardInner" class="topic-board-inner brown">
+      <div class="topic-board-panel">
+        <div id="topicBoardText" class="topic-board-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="join-box" id="joinBox">
+    <input id="userName" placeholder="名前（4文字以内）" maxlength="4" />
+    <input id="roomCode" placeholder="ルームコード（未入力で自動生成）" maxlength="12" />
+    <button class="btn primary" id="btnJoin">入室</button>
+  </div>
+
+  <div id="lobby" class="hidden">
+    <h2>ロビー</h2>
+    <div id="roomInfoLobby" style="margin-bottom:8px;"></div>
+    <p>ここにテーブルや情報が表示されます。</p>
+    <div id="playerCircle" class="player-circle"></div>
+
+    <div class="my-hand-wrapper">
+      <div class="my-hand-title">自分のカード</div>
+      <div id="myHand" class="my-hand"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ★ TIME UP! ポップ -->
+<div id="timeupPop" class="timeup-pop hidden">TIME UP!</div>
+
+<!-- マスター用：正解!! ボタン -->
+<button id="btnCorrect" class="correct-btn hidden">正解!!</button>
+
+<!-- 画面下部：黒背景白字ポップ（1段目：正解した？／ギリギリ正解？） -->
+<div id="bottomPop" class="bottom-pop hidden">
+  <div id="bottomPopText" class="bottom-pop-text"></div>
+  <div id="bottomPopActions" class="bottom-pop-actions hidden">
+    <button id="btnGuessNo" class="btn ghost">いいえ</button>
+    <button id="btnGuessYes" class="btn primary">はい</button>
+  </div>
+</div>
+
+<!-- 2段階目確認ポップ（本当に？） -->
+<div id="confirmPop" class="bottom-pop hidden">
+  <div id="confirmPopText" class="bottom-pop-text">本当に正解でいいですか？</div>
+  <div class="bottom-pop-actions">
+    <button id="btnConfirmNo" class="btn ghost">いいえ</button>
+    <button id="btnConfirmYes" class="btn primary">はい</button>
+  </div>
+</div>
+
+<!-- 中央：拡大カード演出 -->
+<div id="centerReveal" class="center-reveal hidden">
+  <div id="centerRevealCard" class="center-reveal-card"></div>
+</div>
+
+<!-- 席ポップ -->
+<div id="seatPop" class="seat-pop hidden">
+  <div class="row">
+    <label>席を選択</label>
+    <div id="seatTabs" class="tabs"></div>
+  </div>
+  <div class="row" style="justify-content:flex-end">
+    <button class="btn small ghost" id="btnSeatCancel">観戦</button>
+  </div>
+</div>
+
+<!-- 追い出しダイアログ -->
+<div id="kickDialog" class="dialog-backdrop hidden">
+  <div class="dialog-box" id="kickDialogBox">
+    <p id="kickMessage">既存のプレイヤーを追い出して、着席しますか？</p>
+    <div class="dialog-buttons">
+      <button class="btn ghost" id="btnKickNo">いいえ</button>
+      <button class="btn primary" id="btnKickYes">はい</button>
+    </div>
+  </div>
+</div>
+
+<button id="hostSettingsBtn" class="host-settings-btn" title="設定">⚙</button>
+
+<div id="startPop" class="start-pop hidden">
+  <div class="start-pop-header">
+    <div class="start-pop-title">ゲームスタート</div>
+    <button id="btnStartPopClose" class="btn ghost" style="padding:2px 6px;font-size:12px;">×</button>
+  </div>
+  <div class="start-pop-main">
+    準備ができたら「スタート」を押してください。<br>
+    押すと全プレイヤーにカードが1枚ずつ配られます。
+  </div>
+  <div class="start-pop-actions">
+    <button id="btnGameStart" class="btn primary">スタート</button>
+  </div>
+</div>
+
+<div id="masterPop" class="master-pop hidden">
+  <div class="master-pop-title">お題を選んでください</div>
+  <div id="masterChoices" class="master-pop-choices"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAMeKfMoHt9qOQ2VuUBpkrKuei7yGBbEi8",
+  authDomain: "cheesetheft-fd52f.firebaseapp.com",
+  databaseURL: "https://cheesetheft-fd52f-default-rtdb.firebaseio.com",
+  projectId: "cheesetheft-fd52f",
+  storageBucket: "cheesetheft-fd52f.firebasestorage.app",
+  messagingSenderId: "298688959395",
+  appId: "1:298688959395:web:6ac2c3eb214201f2020016",
+  measurementId: "G-HPDFTCLR8H"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+const savedUserId = sessionStorage.getItem('bbUserId') || crypto.randomUUID();
+sessionStorage.setItem('bbUserId', savedUserId);
+
+const state = {
+  userId: savedUserId,
+  userName: null,
+  roomCode: null,
+  seatedTable: null,
+  isHost: false,
+  hands: {},
+  masterId: null,
+  masterChoices: [],
+  masterChosen: null,
+
+  // 公開フロー
+  reveal: null,
+  _guessPendingTargetId: null,
+  _handledRevealKey: null,
+
+  // 全員公開のタイマー
+  _allRevealTimerId: null,
+  _commitAllTimerId: null,
+
+  // ★ ボード全体公開フラグ & 下部ポップのモード
+  boardOpenToAll: false,
+  bottomMode: null      // 'correct' | 'wolf' | null
+};
+
+const joinBox = document.getElementById('joinBox');
+const inputName = document.getElementById('userName');
+const inputCode = document.getElementById('roomCode');
+const btnJoin = document.getElementById('btnJoin');
+const lobby = document.getElementById('lobby');
+const roomInfo = document.getElementById('roomInfo');
+const roomInfoLobby = document.getElementById('roomInfoLobby');
+const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+const seatPop = document.getElementById('seatPop');
+const seatTabs = document.getElementById('seatTabs');
+const btnSeatCancel = document.getElementById('btnSeatCancel');
+const seatLabel = seatPop.querySelector('label');
+
+const playerCircle = document.getElementById('playerCircle');
+const myHandEl = document.getElementById('myHand');
+
+const kickDialog = document.getElementById('kickDialog');
+const kickMessage = document.getElementById('kickMessage');
+const btnKickYes = document.getElementById('btnKickYes');
+const btnKickNo = document.getElementById('btnKickNo');
+
+const hostSettingsBtn = document.getElementById('hostSettingsBtn');
+const startPop = document.getElementById('startPop');
+const btnStartPopClose = document.getElementById('btnStartPopClose');
+const btnGameStart = document.getElementById('btnGameStart');
+
+const masterPop = document.getElementById('masterPop');
+const masterChoicesEl = document.getElementById('masterChoices');
+
+const timerBox = document.getElementById('timerBox');
+const timerText = document.getElementById('timerText');
+
+const topicBoard = document.getElementById('topicBoard');
+const topicBoardInner = document.getElementById('topicBoardInner');
+const topicBoardText = document.getElementById('topicBoardText');
+
+/* 正解!!ボタン */
+const btnCorrect = document.getElementById('btnCorrect');
+
+/* 下部ポップ＆中央演出 */
+const bottomPop = document.getElementById('bottomPop');
+const bottomPopText = document.getElementById('bottomPopText');
+const bottomPopActions = document.getElementById('bottomPopActions');
+const btnGuessYes = document.getElementById('btnGuessYes');
+const btnGuessNo  = document.getElementById('btnGuessNo');
+
+const centerReveal = document.getElementById('centerReveal');
+const centerRevealCard = document.getElementById('centerRevealCard');
+
+/* ★ 2段階目「本当に？」ポップ */
+const confirmPop = document.getElementById('confirmPop');
+const confirmPopText = document.getElementById('confirmPopText');
+const btnConfirmYes = document.getElementById('btnConfirmYes');
+const btnConfirmNo  = document.getElementById('btnConfirmNo');
+
+/* ★ TIME UP! ポップ */
+const timeupPop = document.getElementById('timeupPop');
+
+let pendingSeatIndexToSteal = null;
+let pendingSeatPlayerIdToSteal = null;
+let isRenderingSeatTabs = false;
+let latestPlayers = [];
+
+let timerInterval = null;
+let currentTimerKey = null;
+
+/* ▼ 0秒になったときのローカル処理 */
+function onTimerEndLocal(){
+  // 1) 全員に TIME UP! を流す
+  showTimeupPop();
+
+  // 2) 0.5秒後、条件を満たすマスターにだけギリギリポップ
+  setTimeout(() => {
+    // マスター以外には出さない
+    if (state.userId !== state.masterId) return;
+    // お題未選択なら何もしない
+    if (!state.masterChosen) return;
+    // すでにボード全体公開済みなら何もしない
+    if (state.boardOpenToAll) return;
+    // すでに狼フェーズ等に入っているなら何もしない
+    if (state.reveal && state.reveal.phase) return;
+
+    state.bottomMode = 'correct';
+    showBottomPop('ギリギリで正解したプレイヤーがいますか？', true);
+  }, 500);
+}
+
+function clearRevealTimers(){
+  if (state._allRevealTimerId){
+    clearTimeout(state._allRevealTimerId);
+    state._allRevealTimerId = null;
+  }
+  if (state._commitAllTimerId){
+    clearTimeout(state._commitAllTimerId);
+    state._commitAllTimerId = null;
+  }
+}
+
+function generateRoomCode(length = 6){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for(let i=0;i<length;i++) code += chars.charAt(Math.floor(Math.random()*chars.length));
+  return code;
+}
+
+async function restoreSeatFromDB(){
+  if (!state.roomCode) return;
+  const tablesRef = ref(db, `rooms/${state.roomCode}/tables`);
+  const snap = await get(tablesRef);
+  const data = snap.val() || {};
+  let mySeatIndex = null;
+
+  for (const [seatIndex, t] of Object.entries(data)) {
+    if (t && t.playerId === state.userId) {
+      mySeatIndex = Number(seatIndex);
+      break;
+    }
+  }
+  if (mySeatIndex !== null) state.seatedTable = mySeatIndex;
+}
+
+function stopTimer(){
+  if (timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  currentTimerKey = null;
+  if (timerBox) timerBox.classList.add('hidden');
+}
+
+function startLocalTimer(chosenAt, durationSec){
+  if (!chosenAt || !durationSec || !timerBox || !timerText) return;
+
+  const key = `${chosenAt}-${durationSec}`;
+  if (currentTimerKey === key) return;
+  currentTimerKey = key;
+
+  if (timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  const endTime = chosenAt + durationSec * 1000;
+  let done = false;   // ★ 0秒処理が一度だけ走るように
+
+  function tick(){
+    const now = Date.now();
+    let remainMs = endTime - now;
+    if (remainMs < 0) remainMs = 0;
+
+    const totalSec = Math.floor(remainMs / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+
+    timerText.textContent = `${min}:${sec.toString().padStart(2,'0')}`;
+
+    if (remainMs <= 0){
+      if (!done){
+        done = true;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        currentTimerKey = null;
+        // ★ ここで 0秒になった瞬間の処理
+        onTimerEndLocal();
+      }
+    }
+  }
+
+  timerBox.classList.remove('hidden');
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+function refreshRoomLabels(){
+  if (!state.roomCode || !state.userName) return;
+  const label = state.isHost ? '（ホスト）' : '';
+  const infoText = `ルーム: ${state.roomCode}, 名前: ${state.userName}${label}`;
+  roomInfo.textContent = infoText;
+  roomInfoLobby.textContent = infoText;
+}
+
+function updateHostUI(){
+  refreshRoomLabels();
+  if (state.isHost){
+    hostSettingsBtn.classList.add('visible');
+  } else {
+    hostSettingsBtn.classList.remove('visible');
+    startPop.classList.add('hidden');
+  }
+}
+
+function subscribeHostState(){
+  if (!state.roomCode) return;
+  const hostRef = ref(db, `rooms/${state.roomCode}/hostId`);
+  onValue(hostRef, snap => {
+    const hostId = snap.val();
+    state.isHost = (hostId === state.userId);
+    updateHostUI();
+  });
+}
+
+function getMyRole(){
+  const my = state.hands?.[state.userId];
+  return (my && Array.isArray(my.cards) && my.cards[0]) ? my.cards[0] : null;
+}
+
+/* お題テキストの自動縮小 */
+function fitTopicText(){
+  if (!topicBoard || !topicBoardText) return;
+  if (topicBoard.classList.contains('hidden')) return;
+  if (!topicBoardText.textContent) return;
+
+  const panel = topicBoardText.closest('.topic-board-panel');
+  if (!panel) return;
+
+  const base = 22;
+  const min  = 8;
+
+  const tryFit = () => {
+    let size = base;
+    topicBoardText.style.fontSize = size + 'px';
+
+    while (
+      size > min &&
+      (topicBoardText.scrollWidth  > panel.clientWidth ||
+       topicBoardText.scrollHeight > panel.clientHeight)
+    ){
+      size -= 1;
+      topicBoardText.style.fontSize = size + 'px';
+    }
+  };
+
+  requestAnimationFrame(() => {
+    tryFit();
+    requestAnimationFrame(() => {
+      tryFit();
+      setTimeout(tryFit, 0);
+    });
+  });
+}
+
+function renderTopicBoard(){
+  if (!topicBoard || !topicBoardInner || !topicBoardText) return;
+
+  const chosen = state.masterChosen;
+  if (!chosen){
+    topicBoard.classList.add('hidden');
+    return;
+  }
+
+  const myRole = getMyRole();
+  const isPrivileged =
+    state.boardOpenToAll ||        // ★ 全員公開が true なら全員見える
+    (state.userId === state.masterId) ||
+    (myRole === '占い師') ||
+    (myRole === '狼');
+
+  topicBoard.classList.remove('hidden');
+
+  if (isPrivileged){
+    topicBoardInner.classList.remove('brown');
+    topicBoardInner.classList.add('white');
+    topicBoardText.textContent = chosen;
+  } else {
+    topicBoardInner.classList.remove('white');
+    topicBoardInner.classList.add('brown');
+    topicBoardText.textContent = '';
+  }
+
+  fitTopicText();
+}
+
+window.addEventListener('resize', fitTopicText);
+
+function subscribeHands(){
+  if (!state.roomCode) return;
+  const handsRef = ref(db, `rooms/${state.roomCode}/hands`);
+  onValue(handsRef, snap => {
+    state.hands = snap.val() || {};
+    renderHands();
+    renderTopicBoard();
+  });
+}
+
+function subscribeMaster(){
+  if (!state.roomCode) return;
+  const mRef = ref(db, `rooms/${state.roomCode}/master`);
+  onValue(mRef, snap => {
+    const m = snap.val();
+
+    if (!m || !m.id) {
+      state.masterId = null;
+      state.masterChoices = [];
+      state.masterChosen = null;
+      state.boardOpenToAll = false;   // ★ リセット
+
+      masterPop.classList.add('hidden');
+      stopTimer();
+      renderTopicBoard();
+      if (btnCorrect) btnCorrect.classList.add('hidden');
+      renderHands(); // マスター消滅時も mayor を消す
+      return;
+    }
+
+    state.masterId = m.id;
+    state.masterChoices = Array.isArray(m.choices) ? m.choices : [];
+    state.boardOpenToAll = !!m.boardOpenToAll; // ★ 全員公開フラグ
+
+    // 一度 chosen が入ったら選択ポップを二度と出さない
+    const alreadyChosen = !!m.chosen;
+
+    if (state.userId === state.masterId && !alreadyChosen) {
+      renderMasterPop();
+    } else {
+      masterPop.classList.add('hidden');
+    }
+
+    // ★ タイマー停止フラグを尊重
+    if (m.timerPaused) {
+      stopTimer();
+    } else if (m.chosenAt && m.durationSec) {
+      startLocalTimer(m.chosenAt, m.durationSec);
+    } else {
+      stopTimer();
+    }
+
+    state.masterChosen = m.chosen || null;
+    renderTopicBoard();
+
+    if (btnCorrect){
+      const show = (state.userId === state.masterId) && !!state.masterChosen;
+      btnCorrect.classList.toggle('hidden', !show);
+    }
+
+    // マスター更新のたび mayor 表示を更新
+    renderHands();
+  });
+}
+
+function renderMasterPop(){
+  masterChoicesEl.innerHTML = '';
+  const choices = state.masterChoices;
+  if (!choices || !choices.length) return;
+
+  choices.forEach(word => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = word;
+
+    btn.onclick = async () => {
+      if (!state.roomCode) return;
+
+      const durationSec = 1 * 5;
+      const chosenAt = Date.now();
+
+      const mRef = ref(db, `rooms/${state.roomCode}/master`);
+      await update(mRef, { chosen: word, chosenAt, durationSec, timerPaused:false });
+
+      startLocalTimer(chosenAt, durationSec);
+      masterPop.classList.add('hidden');
+    };
+
+    masterChoicesEl.appendChild(btn);
+  });
+
+  masterPop.classList.remove('hidden');
+}
+
+/* 役職 → 画像ファイル */
+function roleToImage(role){
+  const map = {
+    '占い師': 'seer.jpg',
+    '千里眼': 'beholder.jpg',
+    '狼':     'wolf.jpg',
+    '村人':   'villager.jpg',
+    'なにか': 'thing.jpg',
+  };
+  return map[role] || 'thing.jpg';
+}
+
+/* 下部ポップ/中央演出 */
+function hideBottomPop(){
+  bottomPop?.classList.add('hidden');
+  bottomPopActions?.classList.add('hidden');
+  state._guessPendingTargetId = null;
+  state.bottomMode = null;   // ★ モードもリセット
+}
+function showBottomPop(text, withActions=false){
+  if (!bottomPop || !bottomPopText || !bottomPopActions) return;
+  bottomPopText.textContent = text;
+
+  // ★ ギリギリポップ判定（文言で判定）
+  const isGiri = text.startsWith('ギリギリで正解したプレイヤーがいますか？');
+  bottomPop.classList.toggle('giri', isGiri);
+
+  bottomPop.classList.remove('hidden');
+  bottomPopActions.classList.toggle('hidden', !withActions);
+}
+
+function hideCenterReveal(){
+  centerReveal?.classList.add('hidden');
+}
+function showCenterReveal(role){
+  if (!centerReveal || !centerRevealCard) return;
+  const img = roleToImage(role);
+  centerRevealCard.style.backgroundImage = `url("${img}")`;
+  centerRevealCard.style.animation = 'none';
+  centerRevealCard.offsetHeight;
+  centerRevealCard.style.animation = '';
+  centerReveal.classList.remove('hidden');
+}
+
+/* TIME UP! ポップ表示（全員ローカル） */
+function showTimeupPop(){
+  if (!timeupPop) return;
+  timeupPop.classList.remove('hidden');
+  timeupPop.classList.remove('show');
+  // reflow
+  void timeupPop.offsetWidth;
+  timeupPop.classList.add('show');
+
+  // アニメーション終了後に隠す
+  setTimeout(() => {
+    timeupPop.classList.add('hidden');
+    timeupPop.classList.remove('show');
+  }, 1700);
+}
+
+/* 2段階目ポップ制御 */
+function hideConfirmPop(){
+  confirmPop?.classList.add('hidden');
+}
+function showConfirmPop(message = '本当に正解でいいですか？'){
+  if (!confirmPop || !confirmPopText) return;
+  confirmPopText.textContent = message;
+  confirmPop.classList.remove('hidden');
+}
+
+function getWolfIdFromHands(){
+  const entries = Object.entries(state.hands || {});
+  for (const [uid, hand] of entries){
+    const role = hand?.cards?.[0];
+    if (role === '狼') return uid;
+  }
+  return null;
+}
+
+function isRevealWolfCard(uid){
+  const r = state.reveal;
+  if (!r) return false;
+  return r.phase === 'wolf' && r.wolfId === uid;
+}
+function isRevealTargetCard(uid){
+  const r = state.reveal;
+  if (!r) return false;
+  if (r.phase !== 'target') return false;
+  return r.targetId === uid;
+}
+
+/* allAt を優先（target t0+5000 でもOK） */
+function isAllRevealActive(){
+  const r = state.reveal;
+  if (!r) return false;
+  if (r.phase === 'all') return true;
+
+  const at = (typeof r.allAt === 'number')
+    ? r.allAt
+    : (r.phase === 'target' && r.t0 ? (r.t0 + 5000) : null);
+
+  return (typeof at === 'number') ? (Date.now() >= at) : false;
+}
+
+/* ★ 千里眼の人は占い師のミニ正体カードを常に表で見る（1.3倍） */
+function shouldRevealRoleForPlayer(uid){
+  const myRole = getMyRole();
+  const targetHand = state.hands?.[uid];
+  const targetRole = targetHand?.cards?.[0];
+
+  // 千里眼の能力：自分が千里眼なら、占い師のカードは常に見える
+  if (myRole === '千里眼' && targetRole === '占い師') {
+    return true;
+  }
+
+  if (isAllRevealActive()) return true;
+  if (isRevealWolfCard(uid)) return true;
+  if (isRevealTargetCard(uid)) return true;
+  return false;
+}
+
+function renderRevealUI(){
+  const r = state.reveal;
+
+  if (!r || !r.phase){
+    clearRevealTimers();
+    hideBottomPop();
+    hideCenterReveal();
+    return;
+  }
+
+  if (r.phase === 'wolf'){
+    clearRevealTimers();
+    hideCenterReveal();
+    if (state.userId === r.wolfId){
+      showBottomPop('誰が占い師？ネームタグをクリック', false);
+    } else {
+      showBottomPop('狼が考え中…', false);
+    }
+    return;
+  }
+
+  if (r.phase === 'target'){
+    hideBottomPop();
+
+    const key = `${r.phase}:${r.t0}:${r.targetId}`;
+    if (state._handledRevealKey !== key){
+      state._handledRevealKey = key;
+      hideCenterReveal();
+
+      const now = Date.now();
+      const showAt = (r.t0 || now) + 800;     // 0.8秒後に中央表示
+      const hideAt = showAt + 2000;           // 2秒揺れで消す
+      const allAt  = (r.t0 || now) + 5000;    // t0+5秒で全員表
+
+      const targetRole = state.hands?.[r.targetId]?.cards?.[0];
+      if (!targetRole) return;
+
+      const delayShow = Math.max(0, showAt - now);
+      const delayHide = Math.max(0, hideAt - now);
+
+      setTimeout(() => showCenterReveal(targetRole), delayShow);
+      setTimeout(() => hideCenterReveal(), delayHide);
+
+      // DB更新が無くても「t0+5秒」で確実に全員表に
+      clearRevealTimers();
+      const delayAll = Math.max(0, allAt - Date.now());
+
+      // 1) 全員：ローカル再描画
+      state._allRevealTimerId = setTimeout(() => {
+        renderHands();
+        renderRevealUI();
+      }, delayAll);
+
+      // 2) 狼：DBを書き換えて phase:'all' に確定
+      if (state.userId === r.wolfId) {
+        state._commitAllTimerId = setTimeout(async () => {
+          const cur = state.reveal;
+          if (!cur || cur.phase !== 'target') return;
+          if (cur.t0 !== r.t0 || cur.targetId !== r.targetId) return;
+
+          await set(ref(db, `rooms/${state.roomCode}/reveal`), {
+            ...cur,
+            phase: 'all',
+            allAt
+          });
+        }, delayAll);
+      }
+    }
+    return;
+  }
+
+  if (r.phase === 'all'){
+    clearRevealTimers();
+    hideBottomPop();
+    hideCenterReveal();
+    return;
+  }
+}
+
+function subscribeReveal(){
+  if (!state.roomCode) return;
+  const rRef = ref(db, `rooms/${state.roomCode}/reveal`);
+  onValue(rRef, snap => {
+    state.reveal = snap.val() || null;
+    renderHands();      // ミニカード更新
+    renderRevealUI();   // ポップ/中央演出
+  });
+}
+
+/* ★ 正解確認ポップで「はい」が押されたときの処理（最終確定） */
+async function handleCorrectConfirmed(){
+  if (!state.roomCode) return;
+  if (state.userId !== state.masterId) return;
+
+  // 1) ボードを全員に公開
+  const mRef = ref(db, `rooms/${state.roomCode}/master`);
+  await update(mRef, { boardOpenToAll: true });
+
+  // 2) 狼の処理を開始（従来の処理をここに移動）
+  const wolfId = getWolfIdFromHands();
+  if (!wolfId) return;
+
+  await set(ref(db, `rooms/${state.roomCode}/reveal`), {
+    phase: 'wolf',
+    wolfId,
+    startedAt: Date.now()
+  });
+}
+
+/* 1段目ポップ：いいえ */
+btnGuessNo?.addEventListener('click', async () => {
+  hideBottomPop();
+});
+
+/* 1段目ポップ：はい */
+btnGuessYes?.addEventListener('click', async () => {
+  // ★ 正解確認ポップ（ギリギリ or 正解!!）の「はい」
+  if (state.bottomMode === 'correct') {
+    hideBottomPop();
+    // 2段階目「本当に？」ポップを表示
+    showConfirmPop('本当に正解でいいですか？');
+    return;
+  }
+
+  // ▼ ここから従来通り：狼が占い師のターゲットを確定する「はい」
+  const targetId = state._guessPendingTargetId;
+  if (!targetId || !state.roomCode) return;
+
+  const wolfId = state.reveal?.wolfId;
+  if (state.userId !== wolfId) return;
+
+  hideBottomPop();
+
+  const t0 = Date.now();
+  await set(ref(db, `rooms/${state.roomCode}/reveal`), {
+    phase: 'target',
+    wolfId,
+    targetId,
+    t0
+  });
+});
+
+btnConfirmNo?.addEventListener('click', () => {
+  // 「本当に？」ポップを閉じる
+  hideConfirmPop();
+
+  // 再び「ギリギリで正解したプレイヤーがいますか？」ポップに戻す
+  state.bottomMode = 'correct';
+  showBottomPop('ギリギリで正解したプレイヤーがいますか？', true);
+});
+
+/* 2段階目「本当に？」→ はい：ここで初めて確定して狼処理へ */
+btnConfirmYes?.addEventListener('click', async () => {
+  hideConfirmPop();
+  await handleCorrectConfirmed();
+});
+
+/* ★ 自分の手札：マスターなら mayor.jpg を左に表示 */
+function renderMyHand(){
+  myHandEl.innerHTML = '';
+  const handData = state.hands[state.userId];
+  if (!handData || !Array.isArray(handData.cards)) return;
+
+  const isMasterPlayer = (state.userId === state.masterId);
+
+  // マスターなら mayor.jpg を左に追加
+  if (isMasterPlayer){
+    const mayorCard = document.createElement('div');
+    mayorCard.className = 'my-card role-card';
+    mayorCard.style.backgroundImage = 'url("mayor.jpg")';
+    mayorCard.title = 'マスター';
+    mayorCard.textContent = '';
+    myHandEl.appendChild(mayorCard);
+  }
+
+  // 本来の正体カード
+  handData.cards.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'my-card role-card';
+
+    const img = roleToImage(v);
+    card.style.backgroundImage = `url("${img}")`;
+
+    card.title = v;
+    card.textContent = '';
+    myHandEl.appendChild(card);
+  });
+}
+
+function renderHands(){
+  renderMyHand();
+  if (latestPlayers.length) renderPlayerCircle(latestPlayers);
+}
+
+/* 正解!!クリック：タイマー一時停止→確認ポップ表示（1段目） */
+btnCorrect?.addEventListener('click', async () => {
+  if (!state.roomCode) return;
+  if (state.userId !== state.masterId) return;
+
+  const wolfId = getWolfIdFromHands();
+  if (!wolfId) return;
+
+  // ★タイマーは止めない（DBを書き換えない）
+  state.bottomMode = 'correct';
+  showBottomPop('誰かが正解しましたか？', true);
+});
+
+/* URL から room= を復元 */
+const urlParams = new URLSearchParams(window.location.search);
+const roomFromUrl = urlParams.get('room');
+if(roomFromUrl) inputCode.value = roomFromUrl;
+
+/* 入室 */
+btnJoin.addEventListener('click', async () => {
+  state.userName = inputName.value || '名無し';
+  state.roomCode = inputCode.value.trim() || generateRoomCode();
+
+  await set(ref(db, `rooms/${state.roomCode}/users/${state.userId}`), {
+    name: state.userName,
+    joinedAt: Date.now()
+  });
+
+  const roomRef = ref(db, `rooms/${state.roomCode}`);
+  const roomSnap = await get(roomRef);
+  const roomData = roomSnap.val();
+
+  if(!roomData || !roomData.hostId){
+    await update(roomRef, { hostId: state.userId });
+    state.isHost = true;
+  } else {
+    state.isHost = (roomData.hostId === state.userId);
+  }
+
+  updateHostUI();
+
+  joinBox.classList.add('hidden');
+  lobby.classList.remove('hidden');
+  lobby.classList.add('entered');
+
+  await restoreSeatFromDB();
+
+  if (state.seatedTable === null) {
+    await renderSeatTabs();
+    seatPop.classList.remove('hidden');
+  } else {
+    seatPop.classList.add('hidden');
+  }
+
+  subscribePlayers();
+  subscribeHostState();
+  subscribeHands();
+  subscribeMaster();
+  subscribeReveal();
+});
+
+/* リンクコピー */
+copyLinkBtn.addEventListener('click', async () => {
+  const url = `${location.origin}${location.pathname}?room=${state.roomCode}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    copyLinkBtn.classList.add('copied');
+    copyLinkBtn.textContent = 'コピー完了';
+    inputCode.value = state.roomCode;
+
+    setTimeout(()=>{
+      copyLinkBtn.classList.remove('copied');
+      copyLinkBtn.textContent='リンクコピー';
+    },1500);
+  } catch {
+    prompt('コピーできません。手動でコピーしてください', url);
+  }
+});
+
+/* 席選択タブ描画 */
+async function renderSeatTabs(){
+  if (!state.roomCode) return;
+  if (isRenderingSeatTabs) return;
+  isRenderingSeatTabs = true;
+
+  try {
+    seatTabs.innerHTML = '';
+
+    const roomRef = ref(db, `rooms/${state.roomCode}`);
+    const roomSnap = await get(roomRef);
+    const roomData = roomSnap.val() || {};
+
+    const maxPlayers = roomData.maxPlayers || 8;
+
+    if(state.isHost && !roomData.maxPlayers){
+      seatLabel.textContent = '人数を選択';
+
+      for(let i=2; i<=8; i++){
+        const tab = document.createElement('div');
+        tab.className = 'tab';
+        tab.textContent = i;
+
+        tab.onclick = async () => {
+          await update(roomRef, { maxPlayers: i });
+
+          const tRef = ref(db, `rooms/${state.roomCode}/tables/1`);
+          await set(tRef, { playerId: state.userId, playerName: state.userName });
+
+          state.seatedTable = 1;
+          seatPop.classList.add('hidden');
+        };
+
+        seatTabs.appendChild(tab);
+      }
+
+    } else {
+      seatLabel.textContent = '席を選択';
+
+      const tablesSnap = await get(ref(db, `rooms/${state.roomCode}/tables`));
+      const tables = tablesSnap.val() || {};
+
+      for(let i=1; i<=maxPlayers; i++){
+        const tab = document.createElement('div');
+        tab.className = 'tab';
+        tab.textContent = i;
+
+        const t = tables[i];
+        if(t && t.playerId) tab.classList.add('disabled');
+
+        tab.onclick = async () => {
+          if(tab.classList.contains('disabled')) return;
+
+          const tRef = ref(db, `rooms/${state.roomCode}/tables/${i}`);
+          await set(tRef, { playerId: state.userId, playerName: state.userName });
+          tab.classList.add('disabled');
+
+          state.seatedTable = i;
+          seatPop.classList.add('hidden');
+        };
+
+        seatTabs.appendChild(tab);
+      }
+    }
+  } finally {
+    isRenderingSeatTabs = false;
+  }
+}
+
+btnSeatCancel.onclick = () => {
+  seatPop.classList.add('hidden');
+  state.seatedTable = null;
+};
+
+/* プレイヤー一覧購読 */
+function subscribePlayers(){
+  const tablesRef = ref(db, `rooms/${state.roomCode}/tables`);
+  onValue(tablesRef, async snap => {
+    const data = snap.val() || {};
+    const players = Object.entries(data)
+      .map(([seatIndex, t]) => (t && t.playerId ? {
+        id: t.playerId,
+        name: t.playerName || '名無し',
+        seatIndex: Number(seatIndex)
+      } : null))
+      .filter(Boolean)
+      .sort((a,b) => a.seatIndex - b.seatIndex);
+
+    latestPlayers = players;
+
+    const mySeat = players.find(p => p.id === state.userId);
+    if (mySeat && state.seatedTable === null) {
+      state.seatedTable = mySeat.seatIndex;
+      seatPop.classList.add('hidden');
+    }
+
+    const meStillSeated = players.some(p => p.id === state.userId);
+    if (!meStillSeated && state.seatedTable !== null) {
+      state.seatedTable = null;
+      await renderSeatTabs();
+      seatPop.classList.remove('hidden');
+    }
+
+    renderPlayerCircle(players);
+  });
+}
+
+/* ★ 他プレイヤー視点：マスターに mayor ミニカードを表示＋千里眼処理は shouldRevealRoleForPlayer 経由 */
+function renderPlayerCircle(players){
+  playerCircle.innerHTML = '';
+  if (!players.length) return;
+
+  const n = players.length;
+  const radius = 45;
+  const step = (2 * Math.PI) / n;
+  const anchorAngle = Math.PI / 2;
+
+  const meIndex = players.findIndex(p => p.id === state.userId);
+
+  players.forEach((p, idx) => {
+    const k = (meIndex === -1) ? idx : (idx - meIndex + n) % n;
+    const angle = anchorAngle + step * k;
+
+    const x = 50 + radius * Math.cos(angle);
+    const y = 50 + radius * Math.sin(angle);
+
+    const isMe = (p.id === state.userId);
+    const isMasterPlayer = (p.id === state.masterId);
+
+    const tag = document.createElement('div');
+    tag.className =
+      'player-tag' +
+      (isMe ? ' me' : '') +
+      (isMasterPlayer ? ' is-master' : '');
+    tag.textContent = p.name;
+    tag.style.left = `${x}%`;
+    tag.style.top  = `${y}%`;
+
+    tag.onclick = () => {
+      // reveal中：狼の推理クリックを優先
+      const r = state.reveal;
+      if (r && r.phase === 'wolf' && state.userId === r.wolfId){
+        if (p.id === state.userId) return;
+        state._guessPendingTargetId = p.id;
+        state.bottomMode = 'wolf';   // ★ 狼推理モード
+        showBottomPop('この人が占い師だと思う？', true);
+        return;
+      }
+
+      // reveal中：狼以外はクリック無効（追い出しも止める）
+      if (r && (r.phase === 'wolf' || r.phase === 'target' || isAllRevealActive())){
+        return;
+      }
+
+      // 従来の追い出し処理
+      if (p.id === state.userId) return;
+      if (!state.roomCode) return;
+      if (state.seatedTable !== null) return;
+
+      pendingSeatIndexToSteal = p.seatIndex;
+      pendingSeatPlayerIdToSteal = p.id;
+
+      kickMessage.textContent = `「${p.name}」を追い出して、この席に着席しますか？`;
+      kickDialog.classList.remove('hidden');
+    };
+
+    // 他プレイヤーのミニカード
+    const handData = state.hands[p.id];
+    if (p.id !== state.userId && handData && Array.isArray(handData.cards) && handData.cards.length){
+      const miniHand = document.createElement('div');
+      miniHand.className = 'mini-hand';
+
+      const role = handData.cards[0];
+      const reveal = shouldRevealRoleForPlayer(p.id);
+
+      // ★ マスターなら mayor.jpg を左に常時表示（他プレイヤー視点のみ）
+      if (isMasterPlayer){
+        const mayor = document.createElement('div');
+        mayor.className = 'mini-card revealed mayor-mini';
+        mayor.style.backgroundImage = 'url("mayor.jpg")';
+        mayor.style.zIndex = '13';
+        mayor.style.transform = 'translate(-50%,0) rotate(0deg)';
+        miniHand.appendChild(mayor);
+      }
+
+      // 役職ミニカード
+      const card = document.createElement('div');
+      card.className = 'mini-card role-mini';
+
+      if (reveal){
+        card.classList.add('revealed');
+        card.style.backgroundImage = `url("${roleToImage(role)}")`;
+      } else {
+        card.style.backgroundImage = '';
+      }
+
+      card.style.transform = 'translate(-50%,0) rotate(0deg)';
+      card.style.zIndex = '12';
+
+      miniHand.appendChild(card);
+      tag.appendChild(miniHand);
+    }
+
+    playerCircle.appendChild(tag);
+  });
+
+  // reveal UI（プレイヤー再描画のたびに整合）
+  renderRevealUI();
+}
+
+/* 追い出しダイアログの操作 */
+kickDialog.addEventListener('click', (e) => {
+  if (e.target === kickDialog) {
+    kickDialog.classList.add('hidden');
+    pendingSeatIndexToSteal = null;
+    pendingSeatPlayerIdToSteal = null;
+  }
+});
+
+btnKickNo.addEventListener('click', (e) => {
+  e.stopPropagation();
+  kickDialog.classList.add('hidden');
+  pendingSeatIndexToSteal = null;
+  pendingSeatPlayerIdToSteal = null;
+});
+
+btnKickYes.addEventListener('click', async (e) => {
+  e.stopPropagation();
+  if (pendingSeatIndexToSteal == null || !state.roomCode) {
+    kickDialog.classList.add('hidden');
+    return;
+  }
+
+  const seatIndex = pendingSeatIndexToSteal;
+  const roomRef = ref(db, `rooms/${state.roomCode}`);
+
+  const roomSnap = await get(roomRef);
+  const roomData = roomSnap.val() || {};
+
+  const tRef = ref(db, `rooms/${state.roomCode}/tables/${seatIndex}`);
+  await set(tRef, { playerId: state.userId, playerName: state.userName || '名無し' });
+
+  // 追い出した相手がホストならホスト権を奪う
+  if (roomData.hostId && pendingSeatPlayerIdToSteal && roomData.hostId === pendingSeatPlayerIdToSteal) {
+    await update(roomRef, { hostId: state.userId });
+  }
+
+  state.seatedTable = seatIndex;
+
+  kickDialog.classList.add('hidden');
+  pendingSeatIndexToSteal = null;
+  pendingSeatPlayerIdToSteal = null;
+
+  seatPop.classList.add('hidden');
+});
+
+/* 初期配役 */
+async function dealInitialHands(){
+  if (!state.roomCode) return;
+
+  const tablesSnap = await get(ref(db, `rooms/${state.roomCode}/tables`));
+  const tables = tablesSnap.val() || {};
+
+  const seated = Object.entries(tables)
+    .map(([seatIndex, t]) => (t && t.playerId ? { seatIndex:Number(seatIndex), playerId:t.playerId } : null))
+    .filter(Boolean)
+    .sort((a,b) => a.seatIndex - b.seatIndex);
+
+  const n = seated.length;
+  if (!n) return;
+
+  function buildRoleDeck(count){
+    if (count <= 0) return [];
+    if (count === 1) return ['村人'];
+    if (count === 2) return ['占い師','狼'];
+    if (count === 3) return ['占い師','狼','村人'];
+
+    const deck = ['占い師','狼','村人','村人'];
+    if (count >= 5) deck.push('千里眼');
+    if (count >= 6) deck.push('村人');
+    if (count >= 7) deck.push('なにか');
+    while (deck.length < count) deck.push('村人');
+    return deck;
+  }
+
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  const roleDeck = shuffle(buildRoleDeck(n));
+
+  const hands = {};
+  seated.forEach((p, i) => {
+    hands[p.playerId] = { cards: [ roleDeck[i] ] };
+  });
+
+  await set(ref(db, `rooms/${state.roomCode}/hands`), hands);
+
+  // 新ゲーム開始時に公開状態をリセット
+  clearRevealTimers();
+  await set(ref(db, `rooms/${state.roomCode}/reveal`), null);
+}
+
+/* マスターとお題をランダム選出 */
+async function chooseRandomMasterAndWords(){
+  if (!state.roomCode) return;
+
+  const tablesSnap = await get(ref(db, `rooms/${state.roomCode}/tables`));
+  const tables = tablesSnap.val() || {};
+
+  const candidates = Object.values(tables)
+    .filter(t => t && t.playerId)
+    .map(t => t.playerId);
+
+  if (!candidates.length) return;
+
+  const idx = Math.floor(Math.random() * candidates.length);
+  const masterId = candidates[idx];
+
+  const allWords = ['りんご','ごりら','らっぱあああああああ','ぱんつ','つり','りす','コーラ','トイレ'];
+
+  const pool = [...allWords];
+  const selected = [];
+  for (let i = 0; i < 3 && pool.length; i++) {
+    const j = Math.floor(Math.random() * pool.length);
+    selected.push(pool.splice(j, 1)[0]);
+  }
+
+  await set(ref(db, `rooms/${state.roomCode}/master`), {
+    id: masterId,
+    choices: selected,
+    timerPaused: false,      // ★ タイマー初期状態
+    boardOpenToAll: false    // ★ ボードはまだ非公開
+  });
+}
+
+/* ホスト設定ボタン */
+hostSettingsBtn.addEventListener('click', () => {
+  if (!state.isHost) return;
+  startPop.classList.toggle('hidden');
+});
+
+btnStartPopClose.addEventListener('click', () => {
+  startPop.classList.add('hidden');
+});
+
+/* ゲームスタート */
+btnGameStart.addEventListener('click', async () => {
+  if (!state.isHost) return;
+  await dealInitialHands();
+  await chooseRandomMasterAndWords();
+  startPop.classList.add('hidden');
+});
+</script>
+
+</body>
+</html>
