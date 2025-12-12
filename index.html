@@ -1497,8 +1497,8 @@ function startLocalTimer(chosenAt, durationSec){
 
 function refreshRoomLabels(){
   if (!state.roomCode || !state.userName) return;
-  const label = state.isHost ? '★ : '';
-  const infoText = `ルーム: ${state.roomCode}, 名前: ${state.userName}${label}`;
+  const label = state.isHost ? '（ホスト）' : '';
+  const infoText = `code: ${state.roomCode}, 名前: ${state.userName}${label}`;
   roomInfo.textContent = infoText;
   roomInfoLobby.textContent = infoText;
 }
