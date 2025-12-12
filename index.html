@@ -1498,7 +1498,7 @@ function startLocalTimer(chosenAt, durationSec){
 function refreshRoomLabels(){
   if (!state.roomCode || !state.userName) return;
   const label = state.isHost ? '（ホスト）' : '';
-  const infoText = `code: ${state.roomCode}, 名前: ${state.userName}${label}`;
+  const infoText = ` ${state.roomCode}, : ${state.userName}${label}`;
   roomInfo.textContent = infoText;
   roomInfoLobby.textContent = infoText;
 }
@@ -2563,12 +2563,12 @@ copyLinkBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(url);
     copyLinkBtn.classList.add('copied');
-    copyLinkBtn.textContent = 'コピー完了';
+    copyLinkBtn.textContent = 'COPIED';
     inputCode.value = state.roomCode;
 
     setTimeout(()=>{
       copyLinkBtn.classList.remove('copied');
-      copyLinkBtn.textContent='リンクコピー';
+      copyLinkBtn.textContent='COPY';
     },1500);
   } catch {
     prompt('コピーできません。手動でコピーしてください', url);
@@ -3240,3 +3240,4 @@ btnGameStart.addEventListener('click', async () => {
 
 </body>
 </html>
+
