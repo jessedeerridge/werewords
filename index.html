@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>テンプレ</title>
+<title>ワーワーズ</title>
 <style>
 /* ★ ページ自体をスクロールさせない（浮かない） */
 html, body{
@@ -48,6 +48,97 @@ main{
 .hidden{display:none;}
 #lobby{padding:20px;border-top:1px solid #eee;}
 .copy-btn.copied, .btn.ghost.copied{background:#16a34a;color:#fff;border-color:#16a34a;}
+
+/* =========================
+   ★ 追加：左右の丸アイコン（マスターだけクリックで濃さ切替）
+   ========================= */
+.master-icons{
+  position:fixed;
+  inset:0;
+  pointer-events:none; /* クリック可能は各ボタン側で制御 */
+  z-index:1250;
+  display:none;
+}
+body.in-room .master-icons{ display:block; }
+
+.master-icon{
+  pointer-events:auto;
+  position:fixed;
+  top:70%;
+  transform:translateY(-50%);
+  width:60px;   /* 自分の正体カードぐらいの高さ */
+  height:60px;
+  border-radius:50%;
+  border:4px solid #111; /* 黒枠 */
+  box-shadow:0 16px 38px rgba(0,0,0,.22);
+  cursor:default;
+  user-select:none;
+  display:grid;
+  place-items:center;
+  background:#000;
+}
+
+/* ★ マスター以外は押せない */
+.master-icon.locked{
+  pointer-events:none;
+}
+
+/* 右：黒枠＋白枠＋黄色塗り＋「！」白字 */
+.master-icon.right{
+  right:10%;
+  background:#f6c400; /* 黄色塗り */
+}
+.master-icon.right::before{
+  content:'';
+  position:absolute;
+  inset:6px;           /* 内側の白枠 */
+  border-radius:50%;
+  border:3px solid #fff;
+  pointer-events:none;
+}
+.master-icon.right::after{
+  content:'！';
+  font-weight:1000;
+  font-size:53px;
+  color:#fff;
+  line-height:1;
+  transform:translateY(-2px);
+  text-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+
+/* 左：黒枠＋濃い赤塗り＋駐車禁止っぽい白マーク */
+.master-icon.left{
+  left:10%;
+  background:#7a0000; /* 濃い赤 */
+}
+.master-icon.left .nopark{
+  position:relative;
+  width:58px;
+  height:58px;
+}
+.master-icon.left .nopark::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:6px solid #fff; /* 白い円 */
+  box-sizing:border-box;
+}
+.master-icon.left .nopark::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:55px;
+  height:10px;
+  background:#fff;        /* 斜線 */
+  transform:translate(-50%,-50%) rotate(-45deg);
+  border-radius:999px;
+}
+
+/* =========================
+   ★ 以下、元のCSS
+   ========================= */
 
 /* 席ポップ */
 .seat-pop{
@@ -786,12 +877,20 @@ body:not(.in-room) main{
 <body>
 
 <header>
-  <h1>テンプレ</h1>
+  <h1>ワーワーズ</h1>
   <div style="display:flex;align-items:center;gap:6px;">
     <div class="small" id="roomInfo"></div>
     <button class="btn ghost" id="copyLinkBtn">リンクコピー</button>
   </div>
 </header>
+
+<!-- ★ 追加：左右の大きい丸アイコン -->
+<div class="master-icons" id="masterIcons">
+  <div class="master-icon left locked" id="iconLeft" aria-label="左アイコン（駐車禁止）" title="左アイコン">
+    <div class="nopark" aria-hidden="true"></div>
+  </div>
+  <div class="master-icon right locked" id="iconRight" aria-label="右アイコン（！）" title="右アイコン"></div>
+</div>
 
 <main>
   <div id="timerBox" class="timer-wrapper hidden">
@@ -1014,6 +1113,9 @@ const state = {
 
   // ★ 追加：0秒になったら「正解!!」ボタンを再スタートまで封印
   correctBtnLocked: false,
+
+  // ★ 追加：左右アイコンの濃さ（0.2 / 1.0）
+  masterIcons: { left: 0.2, right: 0.2 },
 };
 
 const joinBox = document.getElementById('joinBox');
@@ -1070,6 +1172,70 @@ const centerRevealCardB = document.getElementById('centerRevealCardB');
 
 /* ★ TIME UP! ポップ */
 const timeupPop = document.getElementById('timeupPop');
+
+/* =========================
+   ★ 追加：左右の丸アイコン
+   ========================= */
+const iconLeft  = document.getElementById('iconLeft');
+const iconRight = document.getElementById('iconRight');
+
+/* ★ 追加：アイコン濃さのDB参照 */
+function masterIconsRef(){
+  return ref(db, `rooms/${state.roomCode}/ui/masterIcons`);
+}
+
+function applyMasterIconOpacity(){
+  if (iconLeft)  iconLeft.style.opacity  = String(state.masterIcons.left);
+  if (iconRight) iconRight.style.opacity = String(state.masterIcons.right);
+}
+function resetMasterIconsOpacityLocal(){
+  state.masterIcons.left  = 0.2;
+  state.masterIcons.right = 0.2;
+  applyMasterIconOpacity();
+}
+
+/* ★ 全員が購読して、マスター操作を同期で反映 */
+function subscribeMasterIcons(){
+  if (!state.roomCode) return;
+  onValue(masterIconsRef(), snap => {
+    const v = snap.val() || null;
+    state.masterIcons.left  = (v && typeof v.left  === 'number') ? v.left  : 0.2;
+    state.masterIcons.right = (v && typeof v.right === 'number') ? v.right : 0.2;
+    applyMasterIconOpacity();
+  });
+}
+
+function updateMasterIconInteractivity(){
+  const isMaster = (state.userId === state.masterId);
+  if (iconLeft)  iconLeft.classList.toggle('locked', !isMaster);
+  if (iconRight) iconRight.classList.toggle('locked', !isMaster);
+  if (iconLeft)  iconLeft.style.cursor  = isMaster ? 'pointer' : 'default';
+  if (iconRight) iconRight.style.cursor = isMaster ? 'pointer' : 'default';
+}
+
+/* ★ 押したらDB更新 → 全員に見える */
+async function toggleIcon(which){
+  const isMaster = (state.userId === state.masterId);
+  if (!isMaster) return;
+  if (!state.roomCode) return;
+
+  const current = (which === 'left') ? state.masterIcons.left : state.masterIcons.right;
+  const next = (current === 1 ? 0.2 : 1);
+
+  // ローカル即反映
+  if (which === 'left') state.masterIcons.left = next;
+  else state.masterIcons.right = next;
+  applyMasterIconOpacity();
+
+  // DB更新（全員同期）
+  await update(masterIconsRef(), {
+    left:  (which === 'left')  ? next : state.masterIcons.left,
+    right: (which === 'right') ? next : state.masterIcons.right
+  });
+}
+
+iconLeft?.addEventListener('click', () => toggleIcon('left'));
+iconRight?.addEventListener('click', () => toggleIcon('right'));
 
 /* =========================
    ★ ヘルプ（?）ポップ
@@ -1178,8 +1344,12 @@ function resetAllPopsLocal(){
   // ★ 0秒封印を解除（再スタートで戻す）
   state.correctBtnLocked = false;
 
+  // ★ ローカルは50%に戻す（DBの正は別途リセット/スタートで戻す）
+  resetMasterIconsOpacityLocal();
+
   // ボタン整合
   updateCorrectBtnVisibility();
+  updateMasterIconInteractivity();
 }
 
 /* =========================================================
@@ -1327,7 +1497,7 @@ function startLocalTimer(chosenAt, durationSec){
 
 function refreshRoomLabels(){
   if (!state.roomCode || !state.userName) return;
-  const label = state.isHost ? '（ホスト）' : '';
+  const label = state.isHost ? '★ : '';
   const infoText = `ルーム: ${state.roomCode}, 名前: ${state.userName}${label}`;
   roomInfo.textContent = infoText;
   roomInfoLobby.textContent = infoText;
@@ -1379,6 +1549,7 @@ function subscribeHostState(){
     updateHostSelectingPop();
     syncSeatPopVisibility();
     updateCorrectBtnVisibility();
+    updateMasterIconInteractivity();
   });
 }
 
@@ -1516,6 +1687,7 @@ function subscribeMaster(){
 
       updateHostSelectingPop();
       syncSeatPopVisibility();
+      updateMasterIconInteractivity();
       return;
     }
 
@@ -1543,6 +1715,7 @@ function subscribeMaster(){
     renderTopicBoard();
 
     updateCorrectBtnVisibility();
+    updateMasterIconInteractivity();
 
     renderHands();
     updateHostSelectingPop();
@@ -2204,6 +2377,8 @@ function renderHands(){
   renderMyHand();
   if (latestPlayers.length) renderPlayerCircle(latestPlayers);
   updateCorrectBtnVisibility();
+  updateMasterIconInteractivity();
+  applyMasterIconOpacity();
 }
 
 /* 正解!!クリック */
@@ -2341,6 +2516,10 @@ btnJoin.addEventListener('click', async () => {
   lobby.classList.add('entered');
   document.body.classList.add('in-room');
 
+  // ★ 入室した瞬間はローカルで50%（DB購読で最終確定）
+  resetMasterIconsOpacityLocal();
+  updateMasterIconInteractivity();
+
   latestRoomMeta = (await get(ref(db, `rooms/${state.roomCode}`))).val() || {};
   latestTablesRaw = (await get(ref(db, `rooms/${state.roomCode}/tables`))).val() || {};
 
@@ -2366,12 +2545,16 @@ btnJoin.addEventListener('click', async () => {
   subscribeReveal();
   subscribeVote();
 
+  // ★ 追加：左右アイコン同期購読（全員に見える）
+  subscribeMasterIcons();
+
   // ★ 追加：再スタート合図購読
   subscribeGameKey();
 
   updateHostSelectingPop();
   syncSeatPopVisibility();
   updateCorrectBtnVisibility();
+  applyMasterIconOpacity();
 });
 
 /* リンクコピー */
@@ -2578,6 +2761,8 @@ function renderPlayerCircle(players){
   updateHostSelectingPop();
   syncSeatPopVisibility();
   updateCorrectBtnVisibility();
+  updateMasterIconInteractivity();
+  applyMasterIconOpacity();
 }
 
 /* 追い出しダイアログの操作 */
@@ -2698,7 +2883,7 @@ async function chooseRandomMasterAndWords(){
   const masterId = candidates[idx];
 
   const allWords = [
-'りんご','みかん','バナナ','いちご','ぶどう','なし','もも','すいか','メロン','レモン',
+    'りんご','みかん','バナナ','いちご','ぶどう','なし','もも','すいか','メロン','レモン',
 'ゴリラ','りす','ねこ','いぬ','とり','さかな','はと','うさぎ','かめ','さる',
 'トイレ','洗面台','風呂','シャワー','浴槽','鏡','蛇口','排水口','歯ブラシ','歯磨き粉',
 'コップ','マグカップ','水','お茶','牛乳','タオル','バスタオル','石けん','ハンドソープ','シャンプー',
@@ -2961,8 +3146,7 @@ async function chooseRandomMasterAndWords(){
 'アレクサンドロス大王','ハンニバル','カエサル','クレオパトラ','ラムセス2世','ツタンカーメン','レオナルドダヴィンチ','ミケランジェロ','ラファエロ','ゴッホ',
 'ピカソ','モネ','ダリ','ベートーヴェン','モーツァルト','バッハ','ショパン','チャイコフスキー','ヴィヴァルディ','シューベルト',
 
-'コロンブス','マゼラン','アムンゼン','クック船長','リンドバーグ','アームストロング','ガガーリン','イーロンマスク','ホーキング','カールセーガン']
-;
+'コロンブス','マゼラン','アムンゼン','クック船長','リンドバーグ','アームストロング','ガガーリン','イーロンマスク','ホーキング','カールセーガン'];
 
   const pool = [...allWords];
   const selected = [];
@@ -2991,6 +3175,9 @@ async function resetGameToHostSelect(){
 
   // ★ 全員UI強制リセット用キー（まず更新）
   updates[`${base}/gameKey`] = Date.now();
+
+  // ★ 左右アイコンも「全員に」50%へ（DB側を正として戻す）
+  updates[`${base}/ui/masterIcons`] = { left: 0.2, right: 0.2 };
 
   updates[`${base}/hands`] = null;
   updates[`${base}/master`] = null;
@@ -3038,6 +3225,12 @@ btnGameStart.addEventListener('click', async () => {
 
   // ★ スタートし直すとき：出ているポップ等を全員で強制リセット（封印解除も含む）
   await update(ref(db, `rooms/${state.roomCode}`), { gameKey: Date.now() });
+
+  // ★ スタート時も左右アイコンを「全員に」50%へ（DB側）
+  await set(ref(db, `rooms/${state.roomCode}/ui/masterIcons`), { left: 0.2, right: 0.2 });
+
+  // ローカルも即50%
+  resetMasterIconsOpacityLocal();
 
   await dealInitialHands();
   await chooseRandomMasterAndWords();
