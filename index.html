@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ワーワーズ</title>
+<title>テンプレ</title>
 <style>
 /* ★ ページ自体をスクロールさせない（浮かない） */
 html, body{
@@ -95,7 +95,6 @@ main{
   color:#111;
   border-color:#111;
 }
-
 /* primaryの黒背景を上書き（念のため） */
 .bottom-pop .btn.primary{
   background:#fff;
@@ -155,14 +154,25 @@ main{
   width:16px;
   height:22px;
   border-radius:4px;
-  border:1px solid #bbb;
-  background:linear-gradient(135deg,#e5e7eb,#cbd5f5);
+  border:1px solid rgba(255,255,255,.18); /* 外枠は控えめ */
+  background:#000;                         /* ★ 黒塗り */
   font-size:10px;
   display:flex;
   align-items:center;
   justify-content:center;
   transform-origin:bottom center;
   box-shadow:0 2px 6px rgba(0,0,0,.15);
+  box-sizing:border-box;
+}
+
+/* ★ 枠の内側に白い細い枠（裏向き用） */
+.player-tag .mini-card.role-mini:not(.revealed)::after{
+  content:'';
+  position:absolute;
+  inset:1px;
+  border-radius:2px;
+  border:1px solid rgba(255,255,255,.9);
+  pointer-events:none;
 }
 
 /* ★ マスターのミニカード位置調整（左右2枚） */
@@ -363,7 +373,7 @@ main{
 .timer-circle::before{
   content:'';
   position:absolute;
-  inset:3px;              /* ← 数字が大きいほど「内側に」寄る */
+  inset:3px;
   border-radius:50%;
   background:
     repeating-conic-gradient(
@@ -371,16 +381,15 @@ main{
       #111 0deg 2deg,
       transparent 2deg 45deg
     );
-  /* リングの“太さ”を制限して線を短く見せる */
   -webkit-mask: radial-gradient(circle, transparent 58%, #000 59%);
           mask: radial-gradient(circle, transparent 58%, #000 59%);
 }
 
-/* 中央の白丸（いまのままでOK、少しだけ調整してもOK） */
+/* 中央の白丸 */
 .timer-circle::after{
   content:'';
   position:absolute;
-  inset:18px;              /* ← ここを大きくすると、さらに線が短く見える */
+  inset:18px;
   border-radius:50%;
   background:#fff;
   z-index:0;
@@ -501,7 +510,7 @@ main{
   border-radius:50%;
   border:2px solid #111;
   background:#5C3B54;
-  color:#fff;  
+  color:#fff;
   font-size:16px;
   font-weight:900;
   box-shadow:0 12px 28px rgba(0,0,0,.22);
@@ -541,7 +550,7 @@ main{
 .bottom-pop-actions.hidden{ display:none; }
 
 /* =========================
-   ★ ミニカード：公開状態（1.3倍）
+   ★ ミニカード：公開状態（1.6倍）
    ========================= */
 .player-tag .mini-card.revealed{
   width: calc(16px * 1.6);
@@ -647,7 +656,7 @@ body.in-room main{
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: local; /* iOS対策で fixed より安定 */
+  background-attachment: local;
 }
 
 /* =========================
@@ -675,7 +684,7 @@ body.in-room main{
   display:none;
 }
 body.in-room .help-btn{
-  display:flex; /* ★ 追加：入室後に表示 */
+  display:flex;
 }
 .help-btn:active{ transform:scale(.98); }
 
@@ -770,17 +779,14 @@ body:not(.in-room) main{
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: local; /* iOS対策で fixed より安定 */
+  background-attachment: local;
 }
-
-
-
 </style>
 </head>
 <body>
 
 <header>
-  <h1>ワーワーズ</h1>
+  <h1>テンプレ</h1>
   <div style="display:flex;align-items:center;gap:6px;">
     <div class="small" id="roomInfo"></div>
     <button class="btn ghost" id="copyLinkBtn">リンクコピー</button>
@@ -834,15 +840,6 @@ body:not(.in-room) main{
   <div id="bottomPopActions" class="bottom-pop-actions hidden">
     <button id="btnGuessNo" class="btn ghost">いいえ</button>
     <button id="btnGuessYes" class="btn primary">はい</button>
-  </div>
-</div>
-
-<!-- 2段階目確認ポップ（本当に？） -->
-<div id="confirmPop" class="bottom-pop hidden">
-  <div id="confirmPopText" class="bottom-pop-text">本当に正解でいいですか？</div>
-  <div class="bottom-pop-actions">
-    <button id="btnConfirmNo" class="btn ghost">いいえ</button>
-    <button id="btnConfirmYes" class="btn primary">はい</button>
   </div>
 </div>
 
@@ -1007,6 +1004,16 @@ const state = {
 
   // ★ 席ポップを「観戦」で閉じたら自動で開き直さない
   seatPopDismissed: false,
+
+  // ★ 追加：全員公開アニメを1回だけ
+  _handledAllRevealAnimKey: null,
+  _handledTimeupKey: null,
+
+  // ★ 追加：ゲーム再スタート合図（全員のUIを強制リセット）
+  gameKey: null,
+
+  // ★ 追加：0秒になったら「正解!!」ボタンを再スタートまで封印
+  correctBtnLocked: false,
 };
 
 const joinBox = document.getElementById('joinBox');
@@ -1061,12 +1068,6 @@ const centerReveal = document.getElementById('centerReveal');
 const centerRevealCardA = document.getElementById('centerRevealCardA');
 const centerRevealCardB = document.getElementById('centerRevealCardB');
 
-/* ★ 2段階目「本当に？」ポップ */
-const confirmPop = document.getElementById('confirmPop');
-const confirmPopText = document.getElementById('confirmPopText');
-const btnConfirmYes = document.getElementById('btnConfirmYes');
-const btnConfirmNo  = document.getElementById('btnConfirmNo');
-
 /* ★ TIME UP! ポップ */
 const timeupPop = document.getElementById('timeupPop');
 
@@ -1116,9 +1117,105 @@ function isHostSelectingNow(){
   return !latestRoomMeta?.maxPlayers;
 }
 
+/* =========================================================
+   ★ 追加：ホスト人数選択中は席ポップを非表示（非ホストだけ）
+   ========================================================= */
+function syncSeatPopVisibility(){
+  if (!seatPop) return;
+  if (isHostSelectingNow() && !state.isHost){
+    seatPop.classList.add('hidden');
+    return;
+  }
+}
+
+/* =========================================================
+   ★ 追加：ギリギリ表示中は「正解!!」ボタンを隠す
+   ★ 追加：0秒到達後は「正解!!」ボタンを再スタートまで封印
+   ========================================================= */
+function updateCorrectBtnVisibility(){
+  if (!btnCorrect) return;
+
+  const isMaster = (state.userId === state.masterId);
+  const hasChosen = !!state.masterChosen;
+
+  const giriVisible =
+    bottomPop && !bottomPop.classList.contains('hidden') && bottomPop.classList.contains('giri');
+
+  const shouldShow = isMaster && hasChosen && !giriVisible && !state.correctBtnLocked;
+  btnCorrect.classList.toggle('hidden', !shouldShow);
+}
+
+/* =========================================================
+   ★ 追加：再スタート時に「出ているポップ全部」をローカルで強制リセット
+   ========================================================= */
+function resetAllPopsLocal(){
+  hideBottomPop();
+  hideCenterReveal();
+
+  // TIMEUPを強制消去
+  if (timeupPop){
+    timeupPop.classList.add('hidden');
+    timeupPop.classList.remove('show');
+  }
+
+  // ヘルプも閉じる
+  closeHelp();
+
+  // タイマー/公開/投票のローカルタイマー停止
+  stopTimer();
+  clearRevealTimers();
+  clearVoteLocalTick();
+
+  // ハンドルキー類もリセット
+  state._guessPendingTargetId = null;
+  state.bottomMode = null;
+
+  state._handledRevealKey = null;
+  state._handledVoteResultKey = null;
+  state._handledAllRevealAnimKey = null;
+  state._handledTimeupKey = null;
+
+  // ★ 0秒封印を解除（再スタートで戻す）
+  state.correctBtnLocked = false;
+
+  // ボタン整合
+  updateCorrectBtnVisibility();
+}
+
+/* =========================================================
+   ★ 追加：gameKey を購読して、変わったら全員でUIを強制リセット
+   ========================================================= */
+function subscribeGameKey(){
+  if (!state.roomCode) return;
+  const gRef = ref(db, `rooms/${state.roomCode}/gameKey`);
+  onValue(gRef, snap => {
+    const key = snap.val() || null;
+    if (!key) return;
+
+    // 初回は記録だけ
+    if (state.gameKey === null){
+      state.gameKey = key;
+      return;
+    }
+
+    if (state.gameKey !== key){
+      state.gameKey = key;
+      resetAllPopsLocal();
+      renderHands();
+      renderTopicBoard();
+      updateHostSelectingPop();
+      syncSeatPopVisibility();
+    }
+  });
+}
+
 /* ▼ 0秒になったときのローカル処理 */
 function onTimerEndLocal(){
   showTimeupPop();
+
+  // ★ 0秒時点で正解ボタンを非表示＆再スタートまで再表示しない
+  state.correctBtnLocked = true;
+  updateCorrectBtnVisibility();
 
   setTimeout(() => {
     if (state.userId !== state.masterId) return;
@@ -1126,6 +1223,11 @@ function onTimerEndLocal(){
     if (state.boardOpenToAll) return;
     if (state.reveal && state.reveal.phase) return;
     if (state.vote && state.vote.phase) return;
+
+    // ★ ギリギリポップが開く＝「誰かが正解しましたか？」を強制的に一度だけ閉じる
+    if (!bottomPop.classList.contains('hidden') && state.bottomMode === 'correct' && !bottomPop.classList.contains('giri')){
+      hideBottomPop();
+    }
 
     state.bottomMode = 'correct';
     showBottomPop('ギリギリで正解したプレイヤーがいますか？', true);
@@ -1179,6 +1281,8 @@ function startLocalTimer(chosenAt, durationSec){
   if (!chosenAt || !durationSec || !timerBox || !timerText) return;
 
   const key = `${chosenAt}-${durationSec}`;
+
+  // ★ まだ同じタイマーを表示中なら再起動しない
   if (currentTimerKey === key) return;
   currentTimerKey = key;
 
@@ -1198,16 +1302,20 @@ function startLocalTimer(chosenAt, durationSec){
     const totalSec = Math.floor(remainMs / 1000);
     const min = Math.floor(totalSec / 60);
     const sec = totalSec % 60;
-
     timerText.textContent = `${min}:${sec.toString().padStart(2,'0')}`;
 
     if (remainMs <= 0){
       if (!done){
         done = true;
+
         clearInterval(timerInterval);
         timerInterval = null;
-        currentTimerKey = null;
-        onTimerEndLocal();
+
+        // ★ 重要：TIMEUPは同じkeyで1回だけ
+        if (state._handledTimeupKey !== key){
+          state._handledTimeupKey = key;
+          onTimerEndLocal();
+        }
       }
     }
   }
@@ -1269,6 +1377,8 @@ function subscribeHostState(){
     state.isHost = (hostId === state.userId);
     updateHostUI();
     updateHostSelectingPop();
+    syncSeatPopVisibility();
+    updateCorrectBtnVisibility();
   });
 }
 
@@ -1276,7 +1386,7 @@ function subscribeHostState(){
 function subscribeRoomMeta(){
   if (!state.roomCode) return;
 
-  let prevMaxPlayers = null; // ★ 追加：人数が「未設定→設定」に変わった瞬間を検知
+  let prevMaxPlayers = null;
 
   const roomRef = ref(db, `rooms/${state.roomCode}`);
   onValue(roomRef, async snap => {
@@ -1286,16 +1396,17 @@ function subscribeRoomMeta(){
     prevMaxPlayers = nowMax;
 
     updateHostSelectingPop();
+    syncSeatPopVisibility();
 
-    // ★ 人数が確定した瞬間：未着席＆未dismiss の人には seatPop を自動表示（非ホストもOK）
     if (!before && nowMax && state.seatedTable === null && !state.seatPopDismissed){
       await renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
       seatPop.classList.remove('hidden');
+      syncSeatPopVisibility();
     }
 
-    // ★ seatPopが既に開いている間はライブ更新（ただし人数未設定中は非ホストはそもそも開かない）
     if (state.seatedTable === null && !state.seatPopDismissed && !seatPop.classList.contains('hidden')){
       renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
+      syncSeatPopVisibility();
     }
   });
 }
@@ -1394,13 +1505,17 @@ function subscribeMaster(){
       state.masterChosen = null;
       state.boardOpenToAll = false;
 
+      // ★ masterが消える（リセット等）時は封印解除（gameKeyでも解除されるが保険）
+      state.correctBtnLocked = false;
+
       masterPop.classList.add('hidden');
       stopTimer();
       renderTopicBoard();
-      if (btnCorrect) btnCorrect.classList.add('hidden');
+      updateCorrectBtnVisibility();
       renderHands();
 
       updateHostSelectingPop();
+      syncSeatPopVisibility();
       return;
     }
 
@@ -1427,13 +1542,11 @@ function subscribeMaster(){
     state.masterChosen = m.chosen || null;
     renderTopicBoard();
 
-    if (btnCorrect){
-      const show = (state.userId === state.masterId) && !!state.masterChosen;
-      btnCorrect.classList.toggle('hidden', !show);
-    }
+    updateCorrectBtnVisibility();
 
     renderHands();
     updateHostSelectingPop();
+    syncSeatPopVisibility();
   });
 }
 
@@ -1454,6 +1567,7 @@ function renderMasterPop(){
       const chosenAt = Date.now();
 
       const mRef = ref(db, `rooms/${state.roomCode}/master`);
+      state._handledTimeupKey = null;
       await update(mRef, { chosen: word, chosenAt, durationSec, timerPaused:false });
 
       startLocalTimer(chosenAt, durationSec);
@@ -1484,6 +1598,7 @@ function hideBottomPop(){
   bottomPopActions?.classList.add('hidden');
   state._guessPendingTargetId = null;
   state.bottomMode = null;
+  updateCorrectBtnVisibility();
 }
 function showBottomPop(text, withActions=false){
   if (!bottomPop || !bottomPopText || !bottomPopActions) return;
@@ -1494,6 +1609,8 @@ function showBottomPop(text, withActions=false){
 
   bottomPop.classList.remove('hidden');
   bottomPopActions.classList.toggle('hidden', !withActions);
+
+  updateCorrectBtnVisibility();
 }
 
 function hideCenterReveal(){
@@ -1540,14 +1657,6 @@ function showTimeupPop(){
   }, 1700);
 }
 
-/* 2段階目ポップ制御 */
-function hideConfirmPop(){ confirmPop?.classList.add('hidden'); }
-function showConfirmPop(message = '本当に正解でいいですか？'){
-  if (!confirmPop || !confirmPopText) return;
-  confirmPopText.textContent = message;
-  confirmPop.classList.remove('hidden');
-}
-
 function getWolfIdFromHands(){
   const entries = Object.entries(state.hands || {});
   for (const [uid, hand] of entries){
@@ -1569,7 +1678,7 @@ function isRevealTargetCard(uid){
   return r.targetId === uid;
 }
 
-/* allAt を優先（target t0+5000 でもOK） */
+/* allAt を優先 */
 function isAllRevealActive(){
   const r = state.reveal;
   if (!r) return false;
@@ -1582,11 +1691,26 @@ function isAllRevealActive(){
   return (typeof at === 'number') ? (Date.now() >= at) : false;
 }
 
+/* ★ 次の手番（席順で次）のプレイヤー判定：viewerId が targetId の次なら true */
+function isNextTurnPlayerOf(viewerId, targetId){
+  if (!viewerId || !targetId) return false;
+  if (!Array.isArray(latestPlayers) || latestPlayers.length < 2) return false;
+
+  const idx = latestPlayers.findIndex(p => p.id === targetId);
+  if (idx < 0) return false;
+
+  const next = latestPlayers[(idx + 1) % latestPlayers.length];
+  return next?.id === viewerId;
+}
+
 /* ★ 千里眼の人は占い師のミニ正体カードを常に表で見る */
 function shouldRevealRoleForPlayer(uid){
   const myRole = getMyRole();
   const targetHand = state.hands?.[uid];
   const targetRole = targetHand?.cards?.[0];
+
+  // ★ なにか の次の手番プレイヤーは、なにか の正体が見える
+  if (targetRole === 'なにか' && isNextTurnPlayerOf(state.userId, uid)) return true;
 
   if (myRole === '千里眼' && targetRole === '占い師') return true;
   if (isAllRevealActive()) return true;
@@ -1669,6 +1793,7 @@ function renderRevealUI(){
     if (state.bottomMode !== 'vote' && state.bottomMode !== 'hostSelecting') hideBottomPop();
     hideCenterReveal();
     updateHostSelectingPop();
+    syncSeatPopVisibility();
     return;
   }
 
@@ -1743,12 +1868,23 @@ function subscribeReveal(){
   const rRef = ref(db, `rooms/${state.roomCode}/reveal`);
   onValue(rRef, snap => {
     state.reveal = snap.val() || null;
+
+    // ★ 全員公開になった直後に一回だけアニメ
+    if (state.reveal?.phase === 'all'){
+      const key = `${state.reveal.allAt || 0}`;
+      if (state._handledAllRevealAnimKey !== key){
+        state._handledAllRevealAnimKey = key;
+        document.body.classList.add('all-reveal-anim');
+        setTimeout(() => document.body.classList.remove('all-reveal-anim'), 650);
+      }
+    }
+
     renderHands();
     renderRevealUI();
   });
 }
 
-/* ★ 正解確認ポップで「はい」が押されたときの処理（最終確定） */
+/* ★ 正解処理（通常処理） */
 async function handleCorrectConfirmed(){
   if (!state.roomCode) return;
   if (state.userId !== state.masterId) return;
@@ -1881,7 +2017,14 @@ function renderVoteUI(){
 
   if (!v || !v.phase) {
     clearVoteLocalTick();
+
+    // ★ voteが消えたら投票ポップも確実に閉じる
+    if (state.bottomMode === 'vote'){
+      hideBottomPop();
+    }
+
     updateHostSelectingPop();
+    syncSeatPopVisibility();
     return;
   }
 
@@ -1919,12 +2062,22 @@ function renderVoteUI(){
     if (state._handledVoteResultKey !== key){
       state._handledVoteResultKey = key;
 
+      // ★ 投票結果を開示したら → 全員の正体カードを開示（reveal all）
+      if (state.isHost){
+        const nowAllAt = Date.now();
+        set(ref(db, `rooms/${state.roomCode}/reveal`), {
+          phase: 'all',
+          allAt: nowAllAt
+        });
+      }
+
       const maxVotes = v.maxVotes || 0;
       const winners = Array.isArray(v.winners) ? v.winners : [];
 
       if (maxVotes <= 0 || winners.length === 0){
         hideCenterReveal();
         updateHostSelectingPop();
+        syncSeatPopVisibility();
         return;
       }
 
@@ -1964,29 +2117,42 @@ function subscribeVote(){
 }
 
 /* =========================
-   ★ ボタンイベント
+   ★ ボタンイベント（仕様反映）
    ========================= */
+
+/* いいえ */
 btnGuessNo?.addEventListener('click', async () => {
   if (state.bottomMode === 'correct'){
     const isGiri = bottomPop?.classList.contains('giri');
     hideBottomPop();
 
     if (isGiri){
+      // ギリギリ→いいえ→通常処理（現仕様：全員公開→投票開始）
+      if (state.userId === state.masterId){
+        await update(ref(db, `rooms/${state.roomCode}/master`), { boardOpenToAll: true });
+      }
       await startVotePhaseFromMaster();
     }
+    // 正解→いいえ→ポップ閉じるだけ（ここで終了）
     return;
   }
+
+  // wolf等
   hideBottomPop();
   updateHostSelectingPop();
 });
 
+/* はい */
 btnGuessYes?.addEventListener('click', async () => {
+  // 正解ボタン→はい→通常処理
+  // ギリギリボタン→はい→通常処理
   if (state.bottomMode === 'correct') {
     hideBottomPop();
-    showConfirmPop('本当に正解でいいですか？');
+    await handleCorrectConfirmed();
     return;
   }
 
+  // 狼フェーズの「この人が占い師？」確認
   const targetId = state._guessPendingTargetId;
   if (!targetId || !state.roomCode) return;
 
@@ -2002,17 +2168,6 @@ btnGuessYes?.addEventListener('click', async () => {
     targetId,
     t0
   });
-});
-
-btnConfirmNo?.addEventListener('click', () => {
-  hideConfirmPop();
-  state.bottomMode = 'correct';
-  showBottomPop('ギリギリで正解したプレイヤーがいますか？', true);
-});
-
-btnConfirmYes?.addEventListener('click', async () => {
-  hideConfirmPop();
-  await handleCorrectConfirmed();
 });
 
 /* ★ 自分の手札：マスターなら mayor.jpg を左に表示 */
@@ -2048,12 +2203,16 @@ function renderMyHand(){
 function renderHands(){
   renderMyHand();
   if (latestPlayers.length) renderPlayerCircle(latestPlayers);
+  updateCorrectBtnVisibility();
 }
 
 /* 正解!!クリック */
 btnCorrect?.addEventListener('click', async () => {
   if (!state.roomCode) return;
   if (state.userId !== state.masterId) return;
+
+  // ★ 0秒封印中は押せない（表示されない想定だが保険）
+  if (state.correctBtnLocked) return;
 
   const wolfId = getWolfIdFromHands();
   if (!wolfId) return;
@@ -2107,7 +2266,6 @@ async function renderSeatTabsLive(roomDataArg, tablesArg){
           seatTabs.appendChild(tab);
         }
       } else {
-        // ★ 非ホストは本来 seatPop を出さないが、表示されてる場合の安全用
         seatLabel.textContent = '人数設定中…';
         for(let i=1; i<=8; i++){
           const tab = document.createElement('div');
@@ -2183,19 +2341,16 @@ btnJoin.addEventListener('click', async () => {
   lobby.classList.add('entered');
   document.body.classList.add('in-room');
 
-  // ★ 先にキャッシュを初期化（初回表示用）
   latestRoomMeta = (await get(ref(db, `rooms/${state.roomCode}`))).val() || {};
   latestTablesRaw = (await get(ref(db, `rooms/${state.roomCode}/tables`))).val() || {};
 
   await restoreSeatFromDB();
 
-  // =========================================================
-  // ★ 変更点：ホスト人数選択中は「非ホストには seatPop を出さない」
-  // =========================================================
   if (state.seatedTable === null && !state.seatPopDismissed) {
     if (!isHostSelectingNow() || state.isHost){
       await renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
       seatPop.classList.remove('hidden');
+      syncSeatPopVisibility();
     } else {
       seatPop.classList.add('hidden');
     }
@@ -2204,14 +2359,19 @@ btnJoin.addEventListener('click', async () => {
   }
 
   subscribePlayers();
-  subscribeRoomMeta();   // ★ 追加：maxPlayers等の購読
+  subscribeRoomMeta();
   subscribeHostState();
   subscribeHands();
   subscribeMaster();
   subscribeReveal();
   subscribeVote();
 
+  // ★ 追加：再スタート合図購読
+  subscribeGameKey();
+
   updateHostSelectingPop();
+  syncSeatPopVisibility();
+  updateCorrectBtnVisibility();
 });
 
 /* リンクコピー */
@@ -2237,7 +2397,7 @@ function subscribePlayers(){
   const tablesRef = ref(db, `rooms/${state.roomCode}/tables`);
   onValue(tablesRef, async snap => {
     const data = snap.val() || {};
-    latestTablesRaw = data; // ★ tablesをキャッシュ（席✕同期の核）
+    latestTablesRaw = data;
 
     const players = Object.entries(data)
       .map(([seatIndex, t]) => (t && t.playerId ? {
@@ -2259,12 +2419,12 @@ function subscribePlayers(){
     const meStillSeated = players.some(p => p.id === state.userId);
     if (!meStillSeated && state.seatedTable !== null) {
       state.seatedTable = null;
-      state.seatPopDismissed = false; // ★ 追い出された等は強制で席選択へ
+      state.seatPopDismissed = false;
 
-      // ★ 変更点：ホスト人数選択中は「非ホストには seatPop を出さない」
       if (!isHostSelectingNow() || state.isHost){
         await renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
         seatPop.classList.remove('hidden');
+        syncSeatPopVisibility();
       } else {
         seatPop.classList.add('hidden');
       }
@@ -2272,12 +2432,13 @@ function subscribePlayers(){
 
     renderPlayerCircle(players);
 
-    // ★ seatPopを開いている間、誰かが座ったら即✕反映
     if (state.seatedTable === null && !state.seatPopDismissed && !seatPop.classList.contains('hidden')){
       renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
+      syncSeatPopVisibility();
     }
 
     updateHostSelectingPop();
+    syncSeatPopVisibility();
   });
 }
 
@@ -2366,7 +2527,6 @@ function renderPlayerCircle(players){
       if (!state.roomCode) return;
       if (state.seatedTable !== null) return;
 
-      // ★ ホスト人数選択中は、席取り自体もしない（席ポップ出ない前提の安全策）
       if (isHostSelectingNow() && !state.isHost) return;
 
       pendingSeatIndexToSteal = p.seatIndex;
@@ -2416,6 +2576,8 @@ function renderPlayerCircle(players){
   renderRevealUI();
   renderVoteUI();
   updateHostSelectingPop();
+  syncSeatPopVisibility();
+  updateCorrectBtnVisibility();
 }
 
 /* 追い出しダイアログの操作 */
@@ -2516,6 +2678,7 @@ async function dealInitialHands(){
   await set(ref(db, `rooms/${state.roomCode}/vote`), null);
   clearVoteLocalTick();
   state._handledVoteResultKey = null;
+  state._handledAllRevealAnimKey = null;
 }
 
 /* マスターとお題をランダム選出 */
@@ -2553,8 +2716,6 @@ async function chooseRandomMasterAndWords(){
 
 /* =========================
    ★ リセット（ホストのみ）
-   - カード/お題/公開/投票/席 を全消し
-   - maxPlayersも消して「人数選択」に戻す
    ========================= */
 async function resetGameToHostSelect(){
   if (!state.roomCode) return;
@@ -2563,34 +2724,30 @@ async function resetGameToHostSelect(){
   const base = `rooms/${state.roomCode}`;
   const updates = {};
 
+  // ★ 全員UI強制リセット用キー（まず更新）
+  updates[`${base}/gameKey`] = Date.now();
+
   updates[`${base}/hands`] = null;
   updates[`${base}/master`] = null;
   updates[`${base}/reveal`] = null;
   updates[`${base}/vote`] = null;
 
-  // 席・人数もリセット（全員を未着席に）
   updates[`${base}/tables`] = null;
   updates[`${base}/maxPlayers`] = null;
 
   await update(ref(db), updates);
 
-  // ローカルも即座に戻す（ホストだけ）
-  stopTimer();
-  clearRevealTimers();
-  clearVoteLocalTick();
-  hideCenterReveal();
-  hideConfirmPop();
-  hideBottomPop();
-  state._handledRevealKey = null;
-  state._handledVoteResultKey = null;
+  // ローカル側も即リセット（ホスト画面の体感を良くする）
+  resetAllPopsLocal();
+
   state.seatedTable = null;
   state.seatPopDismissed = false;
 
-  // seatPopを即表示（ホストは人数選択なので表示OK）
   latestRoomMeta = (await get(ref(db, `${base}`))).val() || {};
   latestTablesRaw = (await get(ref(db, `${base}/tables`))).val() || {};
   await renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
   seatPop.classList.remove('hidden');
+  syncSeatPopVisibility();
 
   startPop.classList.add('hidden');
 }
@@ -2613,6 +2770,10 @@ btnGameReset?.addEventListener('click', async () => {
 /* ゲームスタート */
 btnGameStart.addEventListener('click', async () => {
   if (!state.isHost) return;
+
+  // ★ スタートし直すとき：出ているポップ等を全員で強制リセット（封印解除も含む）
+  await update(ref(db, `rooms/${state.roomCode}`), { gameKey: Date.now() });
+
   await dealInitialHands();
   await chooseRandomMasterAndWords();
   startPop.classList.add('hidden');
