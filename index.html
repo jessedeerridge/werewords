@@ -2691,12 +2691,7 @@ playerCircle?.addEventListener('click', async (e) => {
   const uid = tag.dataset.uid;
   if (!uid) return;
 
-  // 投票中はネームタグで選ばない
-  if (state.vote && state.vote.phase === 'voting') return;
-
-  // 公開系中はネームタグ無効
-  const r = state.reveal;
-  if (r && (r.phase === 'wolf' || r.phase === 'target' || isAllRevealActive())) return;
+  // 投票/公開中でも席奪取は許可する
 
   if (uid === state.userId) return;
   if (!state.roomCode) return;
@@ -3149,17 +3144,20 @@ btnGameStart?.addEventListener('click', async () => {
   startPop.classList.add('hidden');
 });
 
-/* リセット（席/人数は残してゲームだけリセット） */
+/* リセット（人数も席も初期化） */
 btnGameReset?.addEventListener('click', async () => {
   if (!state.roomCode) return;
   if (!state.isHost) return;
 
+  const roomRef = ref(db, `rooms/${state.roomCode}`);
   await set(ref(db, `rooms/${state.roomCode}/gameKey`), Date.now());
   await set(ref(db, `rooms/${state.roomCode}/hands`), null);
   await set(ref(db, `rooms/${state.roomCode}/master`), null);
   await set(ref(db, `rooms/${state.roomCode}/reveal`), null);
   await set(ref(db, `rooms/${state.roomCode}/vote`), null);
   await set(ref(db, `rooms/${state.roomCode}/ui/masterIcons`), { left: 0.2, right: 0.2 });
+  await update(roomRef, { maxPlayers: null });
+  await set(ref(db, `rooms/${state.roomCode}/tables`), null);
 
   startPop.classList.add('hidden');
 
