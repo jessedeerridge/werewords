@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>  
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -66,10 +66,10 @@ body.in-room .master-icons{ display:block; }
   position:fixed;
   top:70%;
   transform:translateY(-50%);
-  width:60px;   /* 自分の正体カードぐらいの高さ */
+  width:60px;
   height:60px;
   border-radius:50%;
-  border:4px solid #111; /* 黒枠 */
+  border:4px solid #111;
   box-shadow:0 16px 38px rgba(0,0,0,.22);
   cursor:default;
   user-select:none;
@@ -86,12 +86,12 @@ body.in-room .master-icons{ display:block; }
 /* 右：黒枠＋白枠＋黄色塗り＋「！」白字 */
 .master-icon.right{
   right:10%;
-  background:#f6c400; /* 黄色塗り */
+  background:#f6c400;
 }
 .master-icon.right::before{
   content:'';
   position:absolute;
-  inset:6px;           /* 内側の白枠 */
+  inset:6px;
   border-radius:50%;
   border:3px solid #fff;
   pointer-events:none;
@@ -109,7 +109,7 @@ body.in-room .master-icons{ display:block; }
 /* 左：黒枠＋濃い赤塗り＋駐車禁止っぽい白マーク */
 .master-icon.left{
   left:10%;
-  background:#7a0000; /* 濃い赤 */
+  background:#7a0000;
 }
 .master-icon.left .nopark{
   position:relative;
@@ -121,7 +121,7 @@ body.in-room .master-icons{ display:block; }
   position:absolute;
   inset:0;
   border-radius:50%;
-  border:6px solid #fff; /* 白い円 */
+  border:6px solid #fff;
   box-sizing:border-box;
 }
 .master-icon.left .nopark::after{
@@ -131,7 +131,7 @@ body.in-room .master-icons{ display:block; }
   top:50%;
   width:55px;
   height:10px;
-  background:#fff;        /* 斜線 */
+  background:#fff;
   transform:translate(-50%,-50%) rotate(-45deg);
   border-radius:999px;
 }
@@ -186,7 +186,6 @@ body.in-room .master-icons{ display:block; }
   color:#111;
   border-color:#111;
 }
-/* primaryの黒背景を上書き（念のため） */
 .bottom-pop .btn.primary{
   background:#fff;
   color:#111;
@@ -228,50 +227,66 @@ body.in-room .master-icons{ display:block; }
   border-color:#111;
 }
 
-/* 他プレイヤーのミニカード（基本） */
+/* =========================
+   ★ 他プレイヤーのミニカード（2.4倍）＆中央寄せ横並び
+   ========================= */
+:root{
+  --mini-scale: 2.4;
+  --mini-w: calc(16px * var(--mini-scale));
+  --mini-h: calc(22px * var(--mini-scale));
+  --mini-gap: 8px;
+}
+
+/* ミニ手札：タグの下で中央寄せ横並び */
 .player-tag .mini-hand{
   position:absolute;
   left:50%;
   top:100%;
-  transform:translate(-50%,3px);
-  width:60px;
-  height:30px;
+  transform:translate(-50%, 4px);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap:var(--mini-gap);
+  height:var(--mini-h);
   pointer-events:none;
+  padding:0;
 }
+
+/* ミニカード：裏面も表面も同サイズ（2.4倍） */
 .player-tag .mini-card{
-  position:absolute;
-  left:50%;
-  top:0;
-  width:16px;
-  height:22px;
-  border-radius:4px;
-  border:1px solid rgba(255,255,255,.18); /* 外枠は控えめ */
-  background:#000;                         /* ★ 黒塗り */
-  font-size:10px;
+  position:relative;
+  width:var(--mini-w);
+  height:var(--mini-h);
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.18);
+  background:#000;
+  box-shadow:0 6px 16px rgba(0,0,0,.18);
+  box-sizing:border-box;
+  font-size:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  transform-origin:bottom center;
-  box-shadow:0 2px 6px rgba(0,0,0,.15);
-  box-sizing:border-box;
+  transform-origin:center;
 }
 
 /* ★ 枠の内側に白い細い枠（裏向き用） */
 .player-tag .mini-card.role-mini:not(.revealed)::after{
   content:'';
   position:absolute;
-  inset:1px;
-  border-radius:2px;
-  border:1px solid rgba(255,255,255,.9);
+  inset:2px;
+  border-radius:6px;
+  border:2px solid rgba(255,255,255,.92);
   pointer-events:none;
 }
 
-/* ★ マスターのミニカード位置調整（左右2枚） */
-.player-tag.is-master .mini-hand{ width:70px; }
-/* 左側：mayor.jpg 用 */
-.player-tag.is-master .mini-hand .mini-card.mayor-mini{ left:30%; }
-/* 右側：役職ミニカード用 */
-.player-tag.is-master .mini-hand .mini-card.role-mini{ left:70%; }
+/* 公開状態：画像＋見た目だけ変える（サイズは同じ） */
+.player-tag .mini-card.revealed{
+  border:1px solid rgba(0,0,0,.22);
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  box-shadow:0 12px 24px rgba(0,0,0,.22);
+}
 
 /* ★ 投票：自分が選んだ相手の上に ✉ */
 .vote-mail{
@@ -296,6 +311,37 @@ body.in-room .master-icons{ display:block; }
   letter-spacing:.08em;
   pointer-events:none;
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
+
+/* =========================
+   ★ 追加：狼の「正体カードクリック」モード
+   - 待機中は 1 ↔ 1.5 の脈動
+   ★ 重要：DOMを作り直さない（JS側で差分更新）ので脈動が途切れない
+   ========================= */
+body.wolf-picking .player-tag .mini-hand{ pointer-events:auto; }
+body.wolf-picking .player-tag .mini-card.role-mini{ cursor:pointer; }
+body.wolf-picking .player-tag .mini-card.role-mini.wolf-pick-pulse{
+  animation:wolfPickPulse .8s ease-in-out infinite;
+}
+@keyframes wolfPickPulse{
+  0%{ transform:scale(1); }
+  50%{ transform:scale(1.5); }
+  100%{ transform:scale(1); }
+}
+
+/* =========================
+   ★ 追加：投票の「正体カードクリック」モード
+   - 待機中は 1 ↔ 1.4 の脈動
+   ========================= */
+body.vote-picking .player-tag .mini-hand{ pointer-events:auto; }
+body.vote-picking .player-tag .mini-card.role-mini{ cursor:pointer; }
+body.vote-picking .player-tag .mini-card.role-mini.vote-pick-pulse{
+  animation:votePickPulse .85s ease-in-out infinite;
+}
+@keyframes votePickPulse{
+  0%{ transform:scale(1); }
+  50%{ transform:scale(1.4); }
+  100%{ transform:scale(1); }
 }
 
 /* 自分の手札 */
@@ -454,7 +500,7 @@ body.in-room .master-icons{ display:block; }
   width:72px;
   height:72px;
   border-radius:50%;
-  background:#fff; /* ベースは白 */
+  background:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -641,20 +687,6 @@ body.in-room .master-icons{ display:block; }
 .bottom-pop-actions.hidden{ display:none; }
 
 /* =========================
-   ★ ミニカード：公開状態（1.6倍）
-   ========================= */
-.player-tag .mini-card.revealed{
-  width: calc(16px * 1.6);
-  height: calc(22px * 1.6);
-  border-radius:6px;
-  border:1px solid rgba(0,0,0,.25);
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
-  box-shadow:0 8px 18px rgba(0,0,0,.22);
-}
-
-/* =========================
    ★ 画面中央の拡大カード + 揺れ
    ========================= */
 .center-reveal{
@@ -737,7 +769,7 @@ body.in-room .master-icons{ display:block; }
   100%{ transform:translate(160%,-50%); opacity:0; }
 }
 
-/* ★ 自分の✉（投票マーク/票数）だけ黒にする */
+/* ★ 自分の✉だけ黒にする */
 .player-tag.me .vote-mail,
 .player-tag.me .vote-count{ color:#111 !important; }
 
@@ -774,9 +806,7 @@ body.in-room main{
   box-shadow:0 8px 20px rgba(0,0,0,.18);
   display:none;
 }
-body.in-room .help-btn{
-  display:flex;
-}
+body.in-room .help-btn{ display:flex; }
 .help-btn:active{ transform:scale(.98); }
 
 /* =========================
@@ -850,13 +880,8 @@ body.in-room .help-btn{
   object-fit:cover;
   flex:0 0 auto;
 }
-.help-text{
-  flex:1 1 auto;
-}
-.help-role{
-  font-weight:900;
-  margin-bottom:4px;
-}
+.help-text{ flex:1 1 auto; }
+.help-role{ font-weight:900; margin-bottom:4px; }
 .help-desc{
   font-size:13px;
   line-height:1.55;
@@ -1094,7 +1119,7 @@ const state = {
 
   // ★ ボード全体公開フラグ & 下部ポップのモード
   boardOpenToAll: false,
-  bottomMode: null,      // 'correct' | 'wolf' | 'vote' | 'hostSelecting' | null
+  bottomMode: null,      // 'correct' | 'wolf' | 'vote' | 'hostSelecting' | 'masterChoosing' | null
 
   // ★ 投票フェーズ
   vote: null,
@@ -1179,7 +1204,6 @@ const timeupPop = document.getElementById('timeupPop');
 const iconLeft  = document.getElementById('iconLeft');
 const iconRight = document.getElementById('iconRight');
 
-/* ★ 追加：アイコン濃さのDB参照 */
 function masterIconsRef(){
   return ref(db, `rooms/${state.roomCode}/ui/masterIcons`);
 }
@@ -1213,7 +1237,6 @@ function updateMasterIconInteractivity(){
   if (iconRight) iconRight.style.cursor = isMaster ? 'pointer' : 'default';
 }
 
-/* ★ 押したらDB更新 → 全員に見える */
 async function toggleIcon(which){
   const isMaster = (state.userId === state.masterId);
   if (!isMaster) return;
@@ -1222,12 +1245,10 @@ async function toggleIcon(which){
   const current = (which === 'left') ? state.masterIcons.left : state.masterIcons.right;
   const next = (current === 1 ? 0.2 : 1);
 
-  // ローカル即反映
   if (which === 'left') state.masterIcons.left = next;
   else state.masterIcons.right = next;
   applyMasterIconOpacity();
 
-  // DB更新（全員同期）
   await update(masterIconsRef(), {
     left:  (which === 'left')  ? next : state.masterIcons.left,
     right: (which === 'right') ? next : state.masterIcons.right
@@ -1253,31 +1274,22 @@ helpBtn?.addEventListener('click', () => {
   else closeHelp();
 });
 helpClose?.addEventListener('click', closeHelp);
-
-/* 背景クリックで閉じる */
-helpModal?.addEventListener('click', (e) => {
-  if (e.target === helpModal) closeHelp();
-});
-
-/* ESCで閉じる */
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeHelp();
-});
+helpModal?.addEventListener('click', (e) => { if (e.target === helpModal) closeHelp(); });
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHelp(); });
 
 let pendingSeatIndexToSteal = null;
 let pendingSeatPlayerIdToSteal = null;
 let isRenderingSeatTabs = false;
 let latestPlayers = [];
 
-let latestTablesRaw = {};  // ★ tables を保持
-let latestRoomMeta  = {};  // ★ maxPlayers など
+let latestTablesRaw = {};
+let latestRoomMeta  = {};
 
 let timerInterval = null;
 let currentTimerKey = null;
 
 /* =========================================================
    ★ 追加：ホスト人数選択中か？
-   - maxPlayers未設定なら「ホスト人数選択中」
    ========================================================= */
 function isHostSelectingNow(){
   return !latestRoomMeta?.maxPlayers;
@@ -1295,8 +1307,65 @@ function syncSeatPopVisibility(){
 }
 
 /* =========================================================
-   ★ 追加：ギリギリ表示中は「正解!!」ボタンを隠す
-   ★ 追加：0秒到達後は「正解!!」ボタンを再スタートまで封印
+   ★ 追加：狼が選択中か？
+   ========================================================= */
+function isWolfPickingNow(){
+  const r = state.reveal;
+  return !!(r && r.phase === 'wolf' && r.wolfId === state.userId);
+}
+function syncWolfPickingClass(){
+  document.body.classList.toggle('wolf-picking', isWolfPickingNow());
+}
+
+/* =========================================================
+   ★ 追加：投票が「カードクリック」モードか？
+   ========================================================= */
+function isVotePickingNow(){
+  const v = state.vote;
+  return !!(v && v.phase === 'voting');
+}
+function syncVotePickingClass(){
+  document.body.classList.toggle('vote-picking', isVotePickingNow());
+}
+
+/* =========================================================
+   ★ 市長がお題を選択中か？
+   ========================================================= */
+function isMasterChoosingNow(){
+  const inRoom = document.body.classList.contains('in-room');
+  if (!inRoom) return false;
+  return !!state.masterId && !state.masterChosen;
+}
+
+function updateMasterChoosingPop(){
+  const inRoom = document.body.classList.contains('in-room');
+  if (!inRoom) return;
+
+  const busy =
+    (state.reveal && state.reveal.phase) ||
+    (state.vote && state.vote.phase) ||
+    (state.bottomMode === 'correct') ||
+    (state.bottomMode === 'wolf') ||
+    (state.bottomMode === 'vote') ||
+    (state.bottomMode === 'hostSelecting');
+
+  if (busy) return;
+
+  const isMaster = (state.userId === state.masterId);
+
+  if (!isMaster && isMasterChoosingNow()){
+    state.bottomMode = 'masterChoosing';
+    showBottomPop('市長がお題を選択中…', false);
+  } else {
+    if (state.bottomMode === 'masterChoosing'){
+      hideBottomPop();
+    }
+  }
+}
+
+/* =========================================================
+   ★ ギリギリ表示中は「正解!!」ボタンを隠す
+   ★ 0秒到達後は「正解!!」ボタンを再スタートまで封印
    ========================================================= */
 function updateCorrectBtnVisibility(){
   if (!btnCorrect) return;
@@ -1312,27 +1381,22 @@ function updateCorrectBtnVisibility(){
 }
 
 /* =========================================================
-   ★ 追加：再スタート時に「出ているポップ全部」をローカルで強制リセット
+   ★ 再スタート時に「出ているポップ全部」をローカルで強制リセット
    ========================================================= */
 function resetAllPopsLocal(){
   hideBottomPop();
   hideCenterReveal();
 
-  // TIMEUPを強制消去
   if (timeupPop){
     timeupPop.classList.add('hidden');
     timeupPop.classList.remove('show');
   }
 
-  // ヘルプも閉じる
   closeHelp();
-
-  // タイマー/公開/投票のローカルタイマー停止
   stopTimer();
   clearRevealTimers();
   clearVoteLocalTick();
 
-  // ハンドルキー類もリセット
   state._guessPendingTargetId = null;
   state.bottomMode = null;
 
@@ -1341,19 +1405,24 @@ function resetAllPopsLocal(){
   state._handledAllRevealAnimKey = null;
   state._handledTimeupKey = null;
 
-  // ★ 0秒封印を解除（再スタートで戻す）
   state.correctBtnLocked = false;
 
-  // ★ ローカルは50%に戻す（DBの正は別途リセット/スタートで戻す）
   resetMasterIconsOpacityLocal();
 
-  // ボタン整合
+  syncWolfPickingClass();
+  syncVotePickingClass();
+
+  updateMasterChoosingPop();
+
   updateCorrectBtnVisibility();
   updateMasterIconInteractivity();
+
+  // ★ DOMは消さない（脈動を途切れさせない方針）ので、差分更新だけ
+  updatePlayerCircleUI(latestPlayers);
 }
 
 /* =========================================================
-   ★ 追加：gameKey を購読して、変わったら全員でUIを強制リセット
+   ★ gameKey 購読
    ========================================================= */
 function subscribeGameKey(){
   if (!state.roomCode) return;
@@ -1362,7 +1431,6 @@ function subscribeGameKey(){
     const key = snap.val() || null;
     if (!key) return;
 
-    // 初回は記録だけ
     if (state.gameKey === null){
       state.gameKey = key;
       return;
@@ -1374,6 +1442,7 @@ function subscribeGameKey(){
       renderHands();
       renderTopicBoard();
       updateHostSelectingPop();
+      updateMasterChoosingPop();
       syncSeatPopVisibility();
     }
   });
@@ -1383,7 +1452,6 @@ function subscribeGameKey(){
 function onTimerEndLocal(){
   showTimeupPop();
 
-  // ★ 0秒時点で正解ボタンを非表示＆再スタートまで再表示しない
   state.correctBtnLocked = true;
   updateCorrectBtnVisibility();
 
@@ -1394,7 +1462,6 @@ function onTimerEndLocal(){
     if (state.reveal && state.reveal.phase) return;
     if (state.vote && state.vote.phase) return;
 
-    // ★ ギリギリポップが開く＝「誰かが正解しましたか？」を強制的に一度だけ閉じる
     if (!bottomPop.classList.contains('hidden') && state.bottomMode === 'correct' && !bottomPop.classList.contains('giri')){
       hideBottomPop();
     }
@@ -1451,8 +1518,6 @@ function startLocalTimer(chosenAt, durationSec){
   if (!chosenAt || !durationSec || !timerBox || !timerText) return;
 
   const key = `${chosenAt}-${durationSec}`;
-
-  // ★ まだ同じタイマーを表示中なら再起動しない
   if (currentTimerKey === key) return;
   currentTimerKey = key;
 
@@ -1481,7 +1546,6 @@ function startLocalTimer(chosenAt, durationSec){
         clearInterval(timerInterval);
         timerInterval = null;
 
-        // ★ 重要：TIMEUPは同じkeyで1回だけ
         if (state._handledTimeupKey !== key){
           state._handledTimeupKey = key;
           onTimerEndLocal();
@@ -1513,7 +1577,6 @@ function updateHostUI(){
   }
 }
 
-/* ★ 人数未選択中：非ホストには黒ポップを出す */
 function updateHostSelectingPop(){
   const inRoom = document.body.classList.contains('in-room');
   if (!inRoom) return;
@@ -1547,6 +1610,7 @@ function subscribeHostState(){
     state.isHost = (hostId === state.userId);
     updateHostUI();
     updateHostSelectingPop();
+    updateMasterChoosingPop();
     syncSeatPopVisibility();
     updateCorrectBtnVisibility();
     updateMasterIconInteractivity();
@@ -1567,6 +1631,7 @@ function subscribeRoomMeta(){
     prevMaxPlayers = nowMax;
 
     updateHostSelectingPop();
+    updateMasterChoosingPop();
     syncSeatPopVisibility();
 
     if (!before && nowMax && state.seatedTable === null && !state.seatPopDismissed){
@@ -1661,6 +1726,7 @@ function subscribeHands(){
     state.hands = snap.val() || {};
     renderHands();
     renderTopicBoard();
+    updateMasterChoosingPop();
   });
 }
 
@@ -1676,7 +1742,6 @@ function subscribeMaster(){
       state.masterChosen = null;
       state.boardOpenToAll = false;
 
-      // ★ masterが消える（リセット等）時は封印解除（gameKeyでも解除されるが保険）
       state.correctBtnLocked = false;
 
       masterPop.classList.add('hidden');
@@ -1686,6 +1751,7 @@ function subscribeMaster(){
       renderHands();
 
       updateHostSelectingPop();
+      updateMasterChoosingPop();
       syncSeatPopVisibility();
       updateMasterIconInteractivity();
       return;
@@ -1719,6 +1785,7 @@ function subscribeMaster(){
 
     renderHands();
     updateHostSelectingPop();
+    updateMasterChoosingPop();
     syncSeatPopVisibility();
   });
 }
@@ -1736,7 +1803,7 @@ function renderMasterPop(){
     btn.onclick = async () => {
       if (!state.roomCode) return;
 
-      const durationSec = 4 * 60;
+      const durationSec = 4 * 1;
       const chosenAt = Date.now();
 
       const mRef = ref(db, `rooms/${state.roomCode}/master`);
@@ -1864,7 +1931,7 @@ function isAllRevealActive(){
   return (typeof at === 'number') ? (Date.now() >= at) : false;
 }
 
-/* ★ 次の手番（席順で次）のプレイヤー判定：viewerId が targetId の次なら true */
+/* ★ 次の手番（席順で次）のプレイヤー判定 */
 function isNextTurnPlayerOf(viewerId, targetId){
   if (!viewerId || !targetId) return false;
   if (!Array.isArray(latestPlayers) || latestPlayers.length < 2) return false;
@@ -1882,7 +1949,6 @@ function shouldRevealRoleForPlayer(uid){
   const targetHand = state.hands?.[uid];
   const targetRole = targetHand?.cards?.[0];
 
-  // ★ なにか の次の手番プレイヤーは、なにか の正体が見える
   if (targetRole === 'なにか' && isNextTurnPlayerOf(state.userId, uid)) return true;
 
   if (myRole === '千里眼' && targetRole === '占い師') return true;
@@ -1961,11 +2027,14 @@ async function stealSeatState(oldId, newId){
 function renderRevealUI(){
   const r = state.reveal;
 
+  syncWolfPickingClass();
+
   if (!r || !r.phase){
     clearRevealTimers();
     if (state.bottomMode !== 'vote' && state.bottomMode !== 'hostSelecting') hideBottomPop();
     hideCenterReveal();
     updateHostSelectingPop();
+    updateMasterChoosingPop();
     syncSeatPopVisibility();
     return;
   }
@@ -1973,8 +2042,9 @@ function renderRevealUI(){
   if (r.phase === 'wolf'){
     clearRevealTimers();
     hideCenterReveal();
+
     if (state.userId === r.wolfId){
-      showBottomPop('誰が占い師？ネームタグをクリック', false);
+      showBottomPop('誰が占い師？カードをクリック', false);
     } else {
       showBottomPop('狼が考え中…', false);
     }
@@ -2042,7 +2112,8 @@ function subscribeReveal(){
   onValue(rRef, snap => {
     state.reveal = snap.val() || null;
 
-    // ★ 全員公開になった直後に一回だけアニメ
+    syncWolfPickingClass();
+
     if (state.reveal?.phase === 'all'){
       const key = `${state.reveal.allAt || 0}`;
       if (state._handledAllRevealAnimKey !== key){
@@ -2054,6 +2125,7 @@ function subscribeReveal(){
 
     renderHands();
     renderRevealUI();
+    updateMasterChoosingPop();
   });
 }
 
@@ -2076,7 +2148,7 @@ async function handleCorrectConfirmed(){
 }
 
 /* =========================
-   ★ 投票フェーズ（ギリギリ「いいえ」→60秒）
+   ★ 投票フェーズ
    ========================= */
 function clearVoteLocalTick(){
   if (state._voteLocalTick){
@@ -2188,15 +2260,15 @@ async function finalizeVoteIfNeeded(){
 function renderVoteUI(){
   const v = state.vote;
 
+  syncVotePickingClass();
+
   if (!v || !v.phase) {
     clearVoteLocalTick();
-
-    // ★ voteが消えたら投票ポップも確実に閉じる
     if (state.bottomMode === 'vote'){
       hideBottomPop();
     }
-
     updateHostSelectingPop();
+    updateMasterChoosingPop();
     syncSeatPopVisibility();
     return;
   }
@@ -2208,19 +2280,24 @@ function renderVoteUI(){
     const mm = remain !== null ? Math.floor(remain / 60) : 0;
     const ss = remain !== null ? (remain % 60) : 0;
     const t = remain !== null ? `（${mm}:${String(ss).padStart(2,'0')}）` : '';
+    showBottomPop(`誰が狼だと思う？正体カードを選択 ${t}`, false);
 
-    showBottomPop(`誰が狼だと思う？ネームタグを選択 ${t}`, false);
-
+    // ★ 重要：ここで毎秒「DOMを作り直す」呼び出しをしない。
+    // 代わりに、差分更新（updatePlayerCircleUI）だけ呼ぶ。
     clearVoteLocalTick();
     state._voteLocalTick = setInterval(() => {
       if (!state.vote || state.vote.phase !== 'voting') return;
+
       const r = voteRemainingSec();
       const mm2 = Math.floor(r / 60);
       const ss2 = r % 60;
-      showBottomPop(`誰が狼だと思う？ネームタグを選択 （${mm2}:${String(ss2).padStart(2,'0')}）`, false);
+
+      showBottomPop(`誰が狼だと思う？正体カードを選択 （${mm2}:${String(ss2).padStart(2,'0')}）`, false);
 
       finalizeVoteIfNeeded();
-      renderHands();
+
+      // ★ パルスを途切れさせない：DOM再生成なしの差分更新
+      updatePlayerCircleUI(latestPlayers);
     }, 1000);
 
     finalizeVoteIfNeeded();
@@ -2235,7 +2312,6 @@ function renderVoteUI(){
     if (state._handledVoteResultKey !== key){
       state._handledVoteResultKey = key;
 
-      // ★ 投票結果を開示したら → 全員の正体カードを開示（reveal all）
       if (state.isHost){
         const nowAllAt = Date.now();
         set(ref(db, `rooms/${state.roomCode}/reveal`), {
@@ -2250,6 +2326,7 @@ function renderVoteUI(){
       if (maxVotes <= 0 || winners.length === 0){
         hideCenterReveal();
         updateHostSelectingPop();
+        updateMasterChoosingPop();
         syncSeatPopVisibility();
         return;
       }
@@ -2284,48 +2361,45 @@ function subscribeVote(){
   const vRef = ref(db, `rooms/${state.roomCode}/vote`);
   onValue(vRef, snap => {
     state.vote = snap.val() || null;
-    renderHands();
+    syncVotePickingClass();
+
+    // ★ 投票状態の変化に追随（差分更新）
+    updatePlayerCircleUI(latestPlayers);
+
     renderVoteUI();
+    updateMasterChoosingPop();
   });
 }
 
 /* =========================
    ★ ボタンイベント（仕様反映）
    ========================= */
-
-/* いいえ */
 btnGuessNo?.addEventListener('click', async () => {
   if (state.bottomMode === 'correct'){
     const isGiri = bottomPop?.classList.contains('giri');
     hideBottomPop();
 
     if (isGiri){
-      // ギリギリ→いいえ→通常処理（現仕様：全員公開→投票開始）
       if (state.userId === state.masterId){
         await update(ref(db, `rooms/${state.roomCode}/master`), { boardOpenToAll: true });
       }
       await startVotePhaseFromMaster();
     }
-    // 正解→いいえ→ポップ閉じるだけ（ここで終了）
     return;
   }
 
-  // wolf等
   hideBottomPop();
   updateHostSelectingPop();
+  updateMasterChoosingPop();
 });
 
-/* はい */
 btnGuessYes?.addEventListener('click', async () => {
-  // 正解ボタン→はい→通常処理
-  // ギリギリボタン→はい→通常処理
   if (state.bottomMode === 'correct') {
     hideBottomPop();
     await handleCorrectConfirmed();
     return;
   }
 
-  // 狼フェーズの「この人が占い師？」確認
   const targetId = state._guessPendingTargetId;
   if (!targetId || !state.roomCode) return;
 
@@ -2363,30 +2437,298 @@ function renderMyHand(){
   handData.cards.forEach(v => {
     const card = document.createElement('div');
     card.className = 'my-card role-card';
-
     const img = roleToImage(v);
     card.style.backgroundImage = `url("${img}")`;
-
     card.title = v;
     card.textContent = '';
     myHandEl.appendChild(card);
   });
 }
 
-function renderHands(){
-  renderMyHand();
-  if (latestPlayers.length) renderPlayerCircle(latestPlayers);
+/* =========================================================
+   ★★★ パルスが途切れる原因：renderPlayerCircle が毎回 innerHTML='' でDOMを作り直していた
+   ★★★ 対策：プレイヤー配置DOMは「必要なときだけ再構築」、通常は差分更新のみ
+   ========================================================= */
+const circleCache = {
+  key: '',
+  tagsById: new Map(),   // uid -> { tag, nameEl, miniHand, mayorMini, roleMini, mailEl, countEl }
+};
+
+function playersKey(players){
+  // 席順や人数が変わったときだけ作り直す
+  return (players || []).map(p => `${p.id}:${p.seatIndex}`).join('|');
+}
+
+function buildPlayerCircleDOM(players){
+  playerCircle.innerHTML = '';
+  circleCache.tagsById.clear();
+
+  const n = players.length;
+  if (!n) {
+    circleCache.key = '';
+    return;
+  }
+
+  players.forEach((p) => {
+    const tag = document.createElement('div');
+    tag.className = 'player-tag';
+    tag.dataset.uid = p.id;
+
+    // 名前は textContent で直に入れていたが、
+    // 子要素を持つので span へ
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'name';
+    nameSpan.textContent = p.name;
+    tag.appendChild(nameSpan);
+
+    // 投票マーク系（常設、表示切替）
+    const mail = document.createElement('div');
+    mail.className = 'vote-mail hidden';
+    mail.textContent = '✉';
+    tag.appendChild(mail);
+
+    const count = document.createElement('div');
+    count.className = 'vote-count hidden';
+    count.textContent = '';
+    tag.appendChild(count);
+
+    // ミニ手札
+    const miniHand = document.createElement('div');
+    miniHand.className = 'mini-hand';
+
+    // mayor mini（必要なら差分で表示）
+    const mayorMini = document.createElement('div');
+    mayorMini.className = 'mini-card revealed mayor-mini hidden';
+    mayorMini.style.backgroundImage = 'url("mayor.jpg")';
+    mayorMini.style.zIndex = '13';
+    miniHand.appendChild(mayorMini);
+
+    // role mini（常設：手札が無い場合は隠す）
+    const roleMini = document.createElement('div');
+    roleMini.className = 'mini-card role-mini hidden';
+    roleMini.style.zIndex = '12';
+    roleMini.dataset.uid = p.id; // クリック判定用
+    miniHand.appendChild(roleMini);
+
+    tag.appendChild(miniHand);
+    playerCircle.appendChild(tag);
+
+    circleCache.tagsById.set(p.id, {
+      tag,
+      nameEl: nameSpan,
+      miniHand,
+      mayorMini,
+      roleMini,
+      mailEl: mail,
+      countEl: count
+    });
+  });
+
+  circleCache.key = playersKey(players);
+}
+
+/* ★ 差分更新：位置、class、カードの公開/裏、パルス、投票マークを更新（DOMは作り直さない） */
+function updatePlayerCircleUI(players){
+  if (!playerCircle) return;
+  if (!players || !players.length){
+    playerCircle.innerHTML = '';
+    circleCache.tagsById.clear();
+    circleCache.key = '';
+    return;
+  }
+
+  const key = playersKey(players);
+  if (circleCache.key !== key){
+    buildPlayerCircleDOM(players);
+  }
+
+  const v = state.vote;
+  const myVoted = voteHasMeVoted();
+  const voters = (v && v.votes) ? Object.keys(v.votes).filter(uid => !!v.votes[uid]) : [];
+  const counts = (v && v.phase === 'result' && v.counts) ? v.counts : null;
+
+  const n = players.length;
+  const radius = 52;
+  const step = (2 * Math.PI) / n;
+  const anchorAngle = Math.PI / 2;
+  const meIndex = players.findIndex(p => p.id === state.userId);
+
+  const wolfPicking = isWolfPickingNow();
+  const votePicking = (state.vote && state.vote.phase === 'voting');
+
+  for (let idx = 0; idx < players.length; idx++){
+    const p = players[idx];
+    const ui = circleCache.tagsById.get(p.id);
+    if (!ui) continue;
+
+    // 席順ベースで自分が下になるよう回転
+    const k = (meIndex === -1) ? idx : (idx - meIndex + n) % n;
+    const angle = anchorAngle + step * k;
+    const x = 50 + radius * Math.cos(angle);
+    const y = 50 + radius * Math.sin(angle);
+
+    ui.tag.style.left = `${x}%`;
+    ui.tag.style.top  = `${y}%`;
+
+    const isMe = (p.id === state.userId);
+    const isMasterPlayer = (p.id === state.masterId);
+
+    ui.tag.classList.toggle('me', isMe);
+
+    // 名前更新（席奪取で変わる可能性）
+    if (ui.nameEl.textContent !== p.name) ui.nameEl.textContent = p.name;
+
+    // voted-black
+    const shouldBlack = myVoted && !isMe && voters.includes(p.id);
+    ui.tag.classList.toggle('voted-black', !!shouldBlack);
+
+    // 投票の自分の投票先 ✉
+    if (v && v.phase === 'voting'){
+      const myTarget = voteMyTargetId();
+      const showMail = !!(myTarget && myTarget === p.id);
+      ui.mailEl.classList.toggle('hidden', !showMail);
+    } else {
+      ui.mailEl.classList.add('hidden');
+    }
+
+    // 票数表示（result）
+    if (v && v.phase === 'result' && counts){
+      const c = counts[p.id] || 0;
+      if (c > 0){
+        ui.countEl.textContent = '✉'.repeat(Math.min(8, c));
+        ui.countEl.classList.remove('hidden');
+      } else {
+        ui.countEl.classList.add('hidden');
+      }
+    } else {
+      ui.countEl.classList.add('hidden');
+    }
+
+    // ミニカード表示：手札がある相手のみ（自分以外）
+    const handData = state.hands?.[p.id];
+    const hasRoleCard = (!isMe && handData && Array.isArray(handData.cards) && handData.cards.length);
+
+    ui.miniHand.style.display = hasRoleCard ? '' : 'none';
+    ui.roleMini.classList.toggle('hidden', !hasRoleCard);
+
+    // 市長カード（その人が市長なら表示）
+    ui.mayorMini.classList.toggle('hidden', !isMasterPlayer);
+
+    if (hasRoleCard){
+      const role = handData.cards[0];
+      const reveal = shouldRevealRoleForPlayer(p.id);
+
+      // 表/裏の切替
+      ui.roleMini.classList.toggle('revealed', !!reveal);
+      if (reveal){
+        const img = roleToImage(role);
+        const bg = `url("${img}")`;
+        if (ui.roleMini.style.backgroundImage !== bg) ui.roleMini.style.backgroundImage = bg;
+      } else {
+        ui.roleMini.style.backgroundImage = '';
+      }
+
+      // ★ パルスの付け外し（毎秒DOM再生成しないので途切れない）
+      // 投票中：全員（自分以外）に vote-pick-pulse
+      // wolf中：投票中でない時だけ wolf-pick-pulse
+      const canPulseTarget = (!isMe);
+
+      ui.roleMini.classList.toggle('vote-pick-pulse', !!(votePicking && canPulseTarget));
+      ui.roleMini.classList.toggle('wolf-pick-pulse', !!(!votePicking && wolfPicking && canPulseTarget));
+    } else {
+      ui.roleMini.classList.remove('vote-pick-pulse','wolf-pick-pulse','revealed');
+      ui.roleMini.style.backgroundImage = '';
+    }
+  }
+
+  // 他フローUIも整合
+  renderRevealUI();
+  renderVoteUI();
+  updateHostSelectingPop();
+  updateMasterChoosingPop();
+  syncSeatPopVisibility();
   updateCorrectBtnVisibility();
   updateMasterIconInteractivity();
   applyMasterIconOpacity();
+  syncWolfPickingClass();
+  syncVotePickingClass();
+}
+
+/* ★ クリックは「イベント委譲」にして、毎回 addEventListener を積み増さない（これも途切れ/重さの原因になる） */
+playerCircle?.addEventListener('click', async (e) => {
+  const roleCard = e.target.closest?.('.mini-card.role-mini');
+  if (roleCard && playerCircle.contains(roleCard)){
+    e.stopPropagation();
+    const uid = roleCard.dataset.uid;
+    if (!uid) return;
+
+    // 投票中：クリックで投票
+    if (state.vote && state.vote.phase === 'voting'){
+      if (uid === state.userId) return;
+      await castVote(uid);
+      return;
+    }
+
+    // wolf中：クリックで「この人が占い師？」確認
+    const r = state.reveal;
+    if (r && r.phase === 'wolf'){
+      if (state.userId !== r.wolfId) return;
+      if (uid === state.userId) return;
+
+      state._guessPendingTargetId = uid;
+      state.bottomMode = 'wolf';
+      showBottomPop('この人が占い師だと思う？', true);
+      return;
+    }
+  }
+});
+
+/* ★ ネームタグクリック（席奪取）は従来通り。ただし投票/公開中は無視 */
+playerCircle?.addEventListener('click', async (e) => {
+  const tag = e.target.closest?.('.player-tag');
+  if (!tag || !playerCircle.contains(tag)) return;
+
+  const uid = tag.dataset.uid;
+  if (!uid) return;
+
+  // 投票中はネームタグで選ばない
+  if (state.vote && state.vote.phase === 'voting') return;
+
+  // 公開系中はネームタグ無効
+  const r = state.reveal;
+  if (r && (r.phase === 'wolf' || r.phase === 'target' || isAllRevealActive())) return;
+
+  if (uid === state.userId) return;
+  if (!state.roomCode) return;
+  if (state.seatedTable !== null) return;
+  if (isHostSelectingNow() && !state.isHost) return;
+
+  const p = latestPlayers.find(x => x.id === uid);
+  if (!p) return;
+
+  pendingSeatIndexToSteal = p.seatIndex;
+  pendingSeatPlayerIdToSteal = p.id;
+
+  kickMessage.textContent = `「${p.name}」を追い出して、この席に着席しますか？`;
+  kickDialog.classList.remove('hidden');
+});
+
+/* ★ ここから renderHands は「DOMを作り直さない」方針に変更 */
+function renderHands(){
+  renderMyHand();
+  if (latestPlayers.length) updatePlayerCircleUI(latestPlayers);
+  updateCorrectBtnVisibility();
+  updateMasterIconInteractivity();
+  applyMasterIconOpacity();
+  syncWolfPickingClass();
+  syncVotePickingClass();
+  updateMasterChoosingPop();
 }
 
 /* 正解!!クリック */
 btnCorrect?.addEventListener('click', async () => {
   if (!state.roomCode) return;
   if (state.userId !== state.masterId) return;
-
-  // ★ 0秒封印中は押せない（表示されない想定だが保険）
   if (state.correctBtnLocked) return;
 
   const wolfId = getWolfIdFromHands();
@@ -2516,7 +2858,6 @@ btnJoin.addEventListener('click', async () => {
   lobby.classList.add('entered');
   document.body.classList.add('in-room');
 
-  // ★ 入室した瞬間はローカルで50%（DB購読で最終確定）
   resetMasterIconsOpacityLocal();
   updateMasterIconInteractivity();
 
@@ -2545,16 +2886,16 @@ btnJoin.addEventListener('click', async () => {
   subscribeReveal();
   subscribeVote();
 
-  // ★ 追加：左右アイコン同期購読（全員に見える）
   subscribeMasterIcons();
-
-  // ★ 追加：再スタート合図購読
   subscribeGameKey();
 
   updateHostSelectingPop();
+  updateMasterChoosingPop();
   syncSeatPopVisibility();
   updateCorrectBtnVisibility();
   applyMasterIconOpacity();
+  syncWolfPickingClass();
+  syncVotePickingClass();
 });
 
 /* リンクコピー */
@@ -2613,7 +2954,8 @@ function subscribePlayers(){
       }
     }
 
-    renderPlayerCircle(players);
+    // ★ ここが重要：DOM再生成ではなく差分更新
+    updatePlayerCircleUI(players);
 
     if (state.seatedTable === null && !state.seatPopDismissed && !seatPop.classList.contains('hidden')){
       renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
@@ -2621,148 +2963,9 @@ function subscribePlayers(){
     }
 
     updateHostSelectingPop();
+    updateMasterChoosingPop();
     syncSeatPopVisibility();
   });
-}
-
-/* ★ 他プレイヤー視点：マスターに mayor ミニカード表示 + 投票UI */
-function renderPlayerCircle(players){
-  playerCircle.innerHTML = '';
-  if (!players.length) return;
-
-  const v = state.vote;
-  const myVoted = voteHasMeVoted();
-  const voters = (v && v.votes) ? Object.keys(v.votes).filter(uid => !!v.votes[uid]) : [];
-  const counts = (v && v.phase === 'result' && v.counts) ? v.counts : null;
-
-  const n = players.length;
-  const radius = 45;
-  const step = (2 * Math.PI) / n;
-  const anchorAngle = Math.PI / 2;
-
-  const meIndex = players.findIndex(p => p.id === state.userId);
-
-  players.forEach((p, idx) => {
-    const k = (meIndex === -1) ? idx : (idx - meIndex + n) % n;
-    const angle = anchorAngle + step * k;
-
-    const x = 50 + radius * Math.cos(angle);
-    const y = 50 + radius * Math.sin(angle);
-
-    const isMe = (p.id === state.userId);
-    const isMasterPlayer = (p.id === state.masterId);
-
-    const tag = document.createElement('div');
-    tag.className =
-      'player-tag' +
-      (isMe ? ' me' : '') +
-      (isMasterPlayer ? ' is-master' : '');
-
-    if (myVoted && !isMe && voters.includes(p.id)){
-      tag.classList.add('voted-black');
-    }
-
-    tag.textContent = p.name;
-    tag.style.left = `${x}%`;
-    tag.style.top  = `${y}%`;
-
-    if (v && v.phase === 'voting'){
-      const myTarget = voteMyTargetId();
-      if (myTarget && myTarget === p.id){
-        const mail = document.createElement('div');
-        mail.className = 'vote-mail';
-        mail.textContent = '✉';
-        tag.appendChild(mail);
-      }
-    }
-
-    if (v && v.phase === 'result' && counts){
-      const c = counts[p.id] || 0;
-      if (c > 0){
-        const vc = document.createElement('div');
-        vc.className = 'vote-count';
-        vc.textContent = '✉'.repeat(Math.min(8, c));
-        tag.appendChild(vc);
-      }
-    }
-
-    tag.onclick = async () => {
-      if (v && v.phase === 'voting'){
-        if (p.id === state.userId) return;
-        await castVote(p.id);
-        return;
-      }
-
-      const r = state.reveal;
-      if (r && r.phase === 'wolf' && state.userId === r.wolfId){
-        if (p.id === state.userId) return;
-        state._guessPendingTargetId = p.id;
-        state.bottomMode = 'wolf';
-        showBottomPop('この人が占い師だと思う？', true);
-        return;
-      }
-
-      if (r && (r.phase === 'wolf' || r.phase === 'target' || isAllRevealActive())){
-        return;
-      }
-
-      if (p.id === state.userId) return;
-      if (!state.roomCode) return;
-      if (state.seatedTable !== null) return;
-
-      if (isHostSelectingNow() && !state.isHost) return;
-
-      pendingSeatIndexToSteal = p.seatIndex;
-      pendingSeatPlayerIdToSteal = p.id;
-
-      kickMessage.textContent = `「${p.name}」を追い出して、この席に着席しますか？`;
-      kickDialog.classList.remove('hidden');
-    };
-
-    const handData = state.hands[p.id];
-    if (p.id !== state.userId && handData && Array.isArray(handData.cards) && handData.cards.length){
-      const miniHand = document.createElement('div');
-      miniHand.className = 'mini-hand';
-
-      const role = handData.cards[0];
-      const reveal = shouldRevealRoleForPlayer(p.id);
-
-      if (isMasterPlayer){
-        const mayor = document.createElement('div');
-        mayor.className = 'mini-card revealed mayor-mini';
-        mayor.style.backgroundImage = 'url("mayor.jpg")';
-        mayor.style.zIndex = '13';
-        mayor.style.transform = 'translate(-50%,0) rotate(0deg)';
-        miniHand.appendChild(mayor);
-      }
-
-      const card = document.createElement('div');
-      card.className = 'mini-card role-mini';
-
-      if (reveal){
-        card.classList.add('revealed');
-        card.style.backgroundImage = `url("${roleToImage(role)}")`;
-      } else {
-        card.style.backgroundImage = '';
-      }
-
-      card.style.transform = 'translate(-50%,0) rotate(0deg)';
-      card.style.zIndex = '12';
-
-      miniHand.appendChild(card);
-      tag.appendChild(miniHand);
-    }
-
-    playerCircle.appendChild(tag);
-  });
-
-  renderRevealUI();
-  renderVoteUI();
-  updateHostSelectingPop();
-  syncSeatPopVisibility();
-  updateCorrectBtnVisibility();
-  updateMasterIconInteractivity();
-  applyMasterIconOpacity();
 }
 
 /* 追い出しダイアログの操作 */
@@ -2864,6 +3067,9 @@ async function dealInitialHands(){
   clearVoteLocalTick();
   state._handledVoteResultKey = null;
   state._handledAllRevealAnimKey = null;
+
+  syncWolfPickingClass();
+  syncVotePickingClass();
 }
 
 /* マスターとお題をランダム選出 */
@@ -2884,363 +3090,83 @@ async function chooseRandomMasterAndWords(){
 
   const allWords = [
     'りんご','みかん','バナナ','いちご','ぶどう','なし','もも','すいか','メロン','レモン',
-'ゴリラ','りす','ねこ','いぬ','とり','さかな','はと','うさぎ','かめ','さる',
-'トイレ','洗面台','風呂','シャワー','浴槽','鏡','蛇口','排水口','歯ブラシ','歯磨き粉',
-'コップ','マグカップ','水','お茶','牛乳','タオル','バスタオル','石けん','ハンドソープ','シャンプー',
-'リンス','ボディソープ','洗濯機','乾燥機','洗剤','柔軟剤','洗濯ネット','物干し','ハンガー','洗濯ばさみ',
-'冷蔵庫','冷凍庫','電子レンジ','炊飯器','トースター','ポット','電気ケトル','ガスコンロ','換気扇','食器棚',
-'鍋','フライパン','やかん','包丁','まな板','おたま','フライ返し','泡立て器','ボウル','ざる',
-'皿','茶碗','どんぶり','箸','スプーン','フォーク','ナイフ','弁当箱','水筒','ラップ',
-'アルミホイル','キッチンペーパー','スポンジ','食器用洗剤','ゴミ袋','ゴミ箱','三角コーナー','調味料','塩','砂糖',
-'机','椅子','ソファ','テーブル','ローテーブル','ベッド','布団','敷布団','掛け布団','枕',
-'毛布','クッション','カーペット','ラグ','カーテン','ブラインド','窓','ドア','玄関','靴箱',
-'鍵','鍵束','靴','スニーカー','サンダル','革靴','靴下','スリッパ','傘','レインコート',
-'帽子','上着','コート','ジャケット','パーカー','Tシャツ','シャツ','ズボン','ジーンズ','スカート',
-'下着','パジャマ','ベルト','ネクタイ','マフラー','手袋','かばん','リュック','トートバッグ','財布',
-'小銭入れ','カード','定期券','スマホ','携帯電話','ケース','充電器','ケーブル','モバイルバッテリー','イヤホン',
-'ヘッドホン','テレビ','リモコン','スピーカー','時計','腕時計','目覚まし時計','カレンダー','写真','写真立て',
-'照明','電球','スタンドライト','懐中電灯','扇風機','エアコン','ストーブ','加湿器','除湿機','空気清浄機',
-'掃除機','コードレス掃除機','ほうき','ちりとり','モップ','雑巾','バケツ','ブラシ','ゴム手袋','掃除用洗剤',
-'ティッシュ','ティッシュ箱','ウェットティッシュ','トイレットペーパー','綿棒','爪切り','ピンセット','くし','ヘアブラシ','ドライヤー',
-'ヘアゴム','ヘアピン','鏡台','化粧水','乳液','クリーム','日焼け止め','カミソリ','シェーバー','歯間ブラシ',
-'本','ノート','メモ帳','ペン','ボールペン','シャープペン','鉛筆','消しゴム','定規','ハサミ',
-'ホチキス','クリップ','付箋','封筒','切手','はがき','新聞','雑誌','チラシ','ファイル',
-'パソコン','ノートパソコン','キーボード','マウス','マウスパッド','USBメモリ','外付けハードディスク','プリンター','インク','コピー用紙',
-'段ボール','紙袋','ビニール袋','保存袋','工具','ドライバー','ハンマー','ネジ','くぎ','メジャー',
-'電池','乾電池','ボタン電池','延長コード','コンセント','電源タップ','スイッチ','インターホン','郵便受け','表札','りんご','みかん','バナナ','いちご','ぶどう','なし','もも','すいか','メロン','さくらんぼ',
-'レモン','オレンジ','グレープフルーツ','キウイ','パイナップル','マンゴー','ブルーベリー','ラズベリー','いちじく','ざくろ',
-'柿','栗','梅','びわ','ライチ','ドラゴンフルーツ','アボカド','パパイヤ','ココナッツ','ゆず',
-
-'トマト','きゅうり','にんじん','じゃがいも','たまねぎ','キャベツ','レタス','はくさい','ほうれん草','ブロッコリー',
-'カリフラワー','ピーマン','なす','かぼちゃ','ズッキーニ','ごぼう','れんこん','だいこん','しょうが','にんにく',
-'ねぎ','たけのこ','とうもろこし','えだまめ','さつまいも','やまいも','しいたけ','えのき','しめじ','まいたけ',
-
-'ごはん','おにぎり','おかゆ','パン','食パン','ロールパン','クロワッサン','フランスパン','ハンバーガー','サンドイッチ',
-'ホットドッグ','ピザ','トースト','ドーナツ','ベーグル','ホットケーキ','ワッフル','ケーキ','ショートケーキ','チョコケーキ',
-
-'クッキー','ビスケット','クラッカー','チョコレート','キャンディ','ガム','グミ','マシュマロ','プリン','ゼリー',
-'ヨーグルト','アイス','アイスクリーム','ソフトクリーム','かき氷','シュークリーム','エクレア','たい焼き','どら焼き','まんじゅう',
-
-'ラーメン','うどん','そば','そうめん','焼きそば','スパゲッティ','パスタ','マカロニ','グラタン','ドリア',
-'カレー','シチュー','ハヤシライス','オムライス','チャーハン','焼き飯','ピラフ','ハンバーグ','ステーキ','とんかつ',
-
-'からあげ','フライドチキン','コロッケ','メンチカツ','エビフライ','天ぷら','餃子','焼売','春巻き','肉まん',
-'ピザまん','中華まん','おでん','たこ焼き','お好み焼き','焼き鳥','串カツ','すき焼き','しゃぶしゃぶ','鍋',
-
-'寿司','巻き寿司','いなり寿司','刺身','まぐろ','サーモン','いか','たこ','えび','あじ',
-'さば','さんま','いわし','うなぎ','穴子','しらす','たら','鮭','かつお','ぶり',
-
-'卵','ゆで卵','目玉焼き','卵焼き','オムレツ','ベーコン','ハム','ソーセージ','ウインナー','ローストビーフ',
-'チーズ','スライスチーズ','クリームチーズ','バター','マーガリン','牛乳','低脂肪乳','豆乳','アーモンドミルク','ヨーグルトドリンク',
-
-'水','ミネラルウォーター','炭酸水','コーラ','サイダー','ジンジャーエール','オレンジジュース','りんごジュース','ぶどうジュース','野菜ジュース',
-'トマトジュース','スポーツドリンク','お茶','緑茶','麦茶','ほうじ茶','烏龍茶','紅茶','ミルクティー','レモンティー',
-
-'コーヒー','ブラックコーヒー','カフェオレ','カフェラテ','エスプレッソ','ココア','ホットミルク','抹茶','甘酒','梅ジュース',
-
-'ビール','ノンアルコールビール','日本酒','焼酎','ワイン','赤ワイン','白ワイン','シャンパン','ハイボール','サワー',
-
-'ポテト','フライドポテト','マッシュポテト','ナゲット','チキン','ビーフ','ポーク','ひき肉','ミートボール','ロールキャベツ',
-
-'ナポリタン','ミートソース','カルボナーラ','ペペロンチーノ','冷やし中華','つけ麺','油そば','担々麺','フォー','ビーフン',
-
-'ナン','タコス','ブリトー','カレーライス','カツカレー','親子丼','牛丼','豚丼','天丼','中華丼',
-
-'杏仁豆腐','マンゴープリン','タピオカ','タピオカミルクティー','フルーツポンチ','みつ豆','あんみつ','わらび餅','大学いも','焼きいも','お正月','元日','初日の出','初詣','書き初め','お年玉','鏡開き','成人式','節分','豆まき',
-'恵方巻','立春','ひな祭り','桃の節句','卒業式','修了式','入学式','入園式','始業式','終業式',
-
-'春休み','夏休み','冬休み','ゴールデンウィーク','連休','祝日','建国記念日','天皇誕生日','昭和の日','憲法記念日',
-'みどりの日','こどもの日','七夕','七夕祭り','夏至','盆','お盆','盆踊り','花火大会','夏祭り',
-
-'縁日','夜店','秋祭り','例大祭','収穫祭','十五夜','お月見','敬老の日','体育の日','運動会',
-'文化祭','学園祭','発表会','展示会','音楽会','合唱祭','遠足','社会科見学','修学旅行','林間学校',
-
-'ハロウィン','仮装','仮装パーティー','感謝祭','勤労感謝の日','クリスマス','クリスマスイブ','イルミネーション','年末','大晦日',
-
-'除夜の鐘','忘年会','新年会','同窓会','歓迎会','送別会','誕生日','誕生日会','誕生パーティー','結婚式',
-'披露宴','二次会','結婚記念日','金婚式','銀婚式','お見合い','プロポーズ','婚約式','葬式','告別式',
-
-'法事','お通夜','お別れ会','七五三','お宮参り','入籍','引っ越し','引っ越し祝い','開店祝い','開業式',
-
-'閉店セール','開店セール','バーゲン','初売り','福袋','タイムセール','試食会','展示即売会','見本市','フェア',
-
-'スポーツ大会','運動大会','マラソン大会','駅伝','オリンピック','パラリンピック','ワールドカップ','甲子園','開会式','閉会式',
-
-'表彰式','授賞式','入賞式','決勝戦','優勝パレード','試合','公式戦','親善試合','交流試合','練習試合',
-
-'コンサート','ライブ','フェス','音楽フェス','ロックフェス','ジャズフェス','舞台','演劇','ミュージカル','バレエ',
-
-'映画祭','試写会','上映会','舞台挨拶','トークショー','サイン会','握手会','ファンミーティング','展示イベント','アート展',
-
-'美術展','写真展','博覧会','万博','エキスポ','見本市','即売会','コミケ','同人イベント','アニメイベント',
-
-'ゲーム大会','eスポーツ大会','カード大会','ボードゲーム会','謎解きイベント','脱出ゲーム','スタンプラリー','街歩きイベント','ウォークラリー','マルシェ',
-
-'フリーマーケット','蚤の市','朝市','夜市','屋台村','グルメフェス','ラーメン祭り','肉フェス','スイーツフェス','ビール祭り',
-
-'収穫体験','芋掘り','田植え体験','稲刈り体験','餅つき','餅つき大会','そば打ち体験','料理教室','試食イベント','試飲会',
-
-'防災訓練','避難訓練','消防訓練','交通安全教室','清掃活動','地域清掃','ボランティア','募金活動','署名活動','説明会',
-
-'説明会','見学会','内覧会','オープンキャンパス','学校説明会','会社説明会','入社式','入隊式','赤ちゃん','学生','小学生','中学生','高校生','大学生','留学生',
-'先生','教師','校長','教頭','担任','講師','教授','研究者','学者','司書',
-
-'医者','内科医','外科医','歯医者','看護師','助産師','薬剤師','整体師','理学療法士','作業療法士',
-'獣医','救急隊員','救命士','介護士','介護福祉士','保育士','幼稚園教諭','カウンセラー','心理士','栄養士',
-
-'会社員','社員','新入社員','営業','営業マン','事務','事務員','経理','会計士','税理士',
-'人事','総務','秘書','広報','企画','マーケター','コンサルタント','アナリスト','マネージャー','管理職',
-
-'社長','副社長','会長','取締役','役員','部長','課長','係長','主任','リーダー',
-
-'公務員','市役所職員','区役所職員','町役場職員','国家公務員','地方公務員','警察官','刑事','交番勤務','白バイ隊員',
-'消防士','消防隊員','自衛官','隊員','海上保安官','検察官','検事','裁判官','弁護士','司法書士',
-
-'政治家','国会議員','市議会議員','町議会議員','知事','市長','町長','村長','首相','大統領',
-
-'銀行員','金融マン','証券マン','保険員','不動産屋','不動産営業','鑑定士','土地家屋調査士','住宅販売員','仲介業者',
-
-'エンジニア','プログラマー','システムエンジニア','ウェブデザイナー','UIデザイナー','UXデザイナー','イラストレーター','グラフィックデザイナー','編集者','ライター',
-
-'記者','新聞記者','雑誌記者','カメラマン','写真家','映像作家','動画編集者','ディレクター','プロデューサー','放送作家',
-
-'アナウンサー','キャスター','リポーター','司会者','ナレーター','声優','俳優','女優','モデル','タレント',
-
-'歌手','ミュージシャン','作曲家','作詞家','指揮者','演奏家','ピアニスト','ギタリスト','ドラマー','ベーシスト',
-
-'画家','彫刻家','芸術家','陶芸家','書道家','漫画家','アニメーター','原画マン','脚本家','小説家',
-
-'翻訳者','通訳','語学教師','日本語教師','英語教師','中国語教師','家庭教師','塾講師','予備校講師','教育コンサル',
-
-'店員','販売員','レジ係','コンビニ店員','スーパー店員','百貨店店員','アパレル店員','ショップスタッフ','店長','副店長',
-
-'飲食店員','ホールスタッフ','キッチンスタッフ','料理人','調理師','シェフ','パティシエ','パン職人','寿司職人','板前',
-
-'農家','農業者','酪農家','漁師','水産業者','林業者','造園業者','園芸家','花屋','フローリスト',
-
-'運転手','タクシー運転手','バス運転手','トラック運転手','配送員','配達員','郵便配達員','宅配員','パイロット','副操縦士',
-
-'客室乗務員','CA','整備士','車掌','駅員','鉄道員','船長','航海士','機関士','船員',
-
-'建築士','建設作業員','大工','左官','電気工事士','配管工','現場監督','施工管理','測量士','設計士',
-
-'スポーツ選手','プロ選手','アマチュア選手','サッカー選手','野球選手','バスケット選手','バレー選手','テニス選手','卓球選手','ゴルファー',
-
-'監督','コーチ','トレーナー','審判','レフェリー','解説者','実況アナ','日本','東京','大阪','京都','奈良','神戸','横浜','川崎','千葉','埼玉',
-'名古屋','静岡','浜松','岐阜','三重','滋賀','和歌山','兵庫','広島','岡山',
-'山口','福岡','北九州','博多','久留米','佐賀','長崎','熊本','大分','宮崎',
-'鹿児島','沖縄','那覇','石垣島','宮古島','北海道','札幌','小樽','函館','旭川',
-'青森','弘前','岩手','盛岡','宮城','仙台','秋田','山形','福島','新潟',
-'富山','金沢','福井','長野','松本','山梨','甲府','群馬','前橋','栃木',
-'宇都宮','茨城','水戸','東京駅','新宿','渋谷','池袋','上野','浅草','秋葉原',
-'銀座','六本木','原宿','表参道','お台場','東京タワー','東京スカイツリー','皇居','国会議事堂','羽田空港',
-
-'アメリカ','カナダ','メキシコ','ブラジル','アルゼンチン','チリ','ペルー','コロンビア','イギリス','ロンドン',
-'フランス','パリ','ドイツ','ベルリン','イタリア','ローマ','ミラノ','スペイン','マドリード','バルセロナ',
-'ポルトガル','オランダ','ベルギー','スイス','オーストリア','スウェーデン','ノルウェー','フィンランド','デンマーク','ポーランド',
-'ロシア','モスクワ','ウクライナ','ギリシャ','アテネ','トルコ','イスタンブール','エジプト','カイロ','南アフリカ',
-'中国','北京','上海','広州','深セン','香港','マカオ','台湾','台北','高雄',
-'韓国','ソウル','釜山','仁川','北朝鮮','モンゴル','インド','デリー','ムンバイ','ネパール',
-'タイ','バンコク','ベトナム','ハノイ','ホーチミン','カンボジア','シンガポール','マレーシア','インドネシア','ジャカルタ',
-'オーストラリア','シドニー','メルボルン','ニュージーランド','オークランド','フィジー','ハワイ','ホノルル','グアム','サイパン',
-
-'ディズニーランド','ディズニーシー','東京ディズニーリゾート','ユニバーサルスタジオ','USJ','ユニバーサルスタジオハリウッド','ユニバーサルスタジオシンガポール','レゴランド','サンリオピューロランド','ハウステンボス',
-'富士急ハイランド','ナガシマスパーランド','よみうりランド','ひらかたパーク','東武動物公園','上野動物園','旭山動物園','アドベンチャーワールド','八景島シーパラダイス','海遊館',
-'水族館','動物園','遊園地','テーマパーク','観覧車','ジェットコースター','お化け屋敷','メリーゴーランド','ゴーカート','アトラクション',
-
-'宇宙','地球','月','太陽','火星','水星','金星','木星','土星','天王星',
-'海王星','冥王星','銀河','天の川','星','流れ星','彗星','人工衛星','宇宙船','ロケット',
-'宇宙ステーション','国際宇宙ステーション','ISS','宇宙基地','月面','火星基地','宇宙空間','無重力','ブラックホール','惑星',
-
-'学校','小学校','中学校','高校','大学','幼稚園','保育園','図書館','公民館','市役所',
-'区役所','町役場','病院','クリニック','歯医者','薬局','交番','警察署','消防署','郵便局',
-'銀行','ATM','コンビニ','スーパー','商店街','百貨店','ショッピングモール','市場','駅','電車',
-'バス停','空港','港','フェリー','高速道路','サービスエリア','駐車場','公園','広場','神社',
-'寺','教会','モスク','墓地','記念館','博物館','美術館','映画館','劇場','スタジアム','体操','準備運動','ストレッチ','ランニング','ジョギング','ウォーキング',
-'マラソン','短距離走','長距離走','リレー','ハードル','走り幅跳び','走り高跳び','三段跳び','砲丸投げ','円盤投げ',
-
-'サッカー','フットサル','野球','ソフトボール','バスケットボール','バレーボール','ドッジボール','テニス','卓球','バドミントン',
-'ラグビー','アメリカンフットボール','ハンドボール','ホッケー','アイスホッケー','クリケット','ラクロス','水球','ビーチバレー','ビーチサッカー',
-
-'ゴルフ','ミニゴルフ','パターゴルフ','ボウリング','ダーツ','ビリヤード','卓上ゲーム','カーリング','スカッシュ','フェンシング',
-'剣道','柔道','空手','合気道','相撲','レスリング','ボクシング','キックボクシング','総合格闘技','テコンドー',
-
-'水泳','競泳','平泳ぎ','背泳ぎ','バタフライ','クロール','飛び込み','シンクロナイズドスイミング','アーティスティックスイミング','水中バレー',
-'シュノーケリング','ダイビング','サーフィン','ボディボード','ウインドサーフィン','カヌー','カヤック','ボート','セーリング','ヨット',
-
-'スキー','スノーボード','スノーモービル','スケート','フィギュアスケート','スピードスケート','アイススケート','そり','雪合戦','雪だるま作り',
-
-'登山','ハイキング','トレッキング','ロッククライミング','ボルダリング','キャンプ','バーベキュー','川遊び','磯遊び','虫取り',
-'釣り','魚釣り','海釣り','川釣り','釣り堀','潮干狩り','貝拾い','石集め','山遊び','自然観察',
-
-'自転車','サイクリング','ロードバイク','マウンテンバイク','BMX','一輪車','スケートボード','ロングボード','キックボード','ローラースケート',
-'インラインスケート','ホバーボード','セグウェイ','電動キックボード','ドリフト三輪車','ストライダー','三輪車','ブランコ','すべり台','鉄棒',
-
-'ジャングルジム','シーソー','砂場','砂遊び','雪遊び','水遊び','鬼ごっこ','かくれんぼ','だるまさんがころんだ','ドロケイ',
-'ケイドロ','宝探し','しっぽ取り','影踏み','色鬼','陣取り','縄跳び','大縄跳び','ゴム跳び','フラフープ',
-
-'ボール遊び','キャッチボール','壁当て','フリスビー','アルティメット','ドローンレース','ラジコン','ミニ四駆','模型作り','プラモデル',
-
-'カードゲーム','トランプ','ババ抜き','七並べ','神経衰弱','大富豪','スピード','ポーカー','ブラックジャック','UNO',
-'花札','百人一首','かるた','将棋','囲碁','チェス','オセロ','バックギャモン','麻雀','ドミノ',
-
-'ボードゲーム','人生ゲーム','モノポリー','カタン','すごろく','ルーレット','パズル','ジグソーパズル','立体パズル','知恵の輪',
-'積み木','ブロック','レゴ','プラレール','鉄道模型','ミニカー','おもちゃ','人形遊び','ままごと','ごっこ遊び',
-
-'テレビゲーム','家庭用ゲーム','携帯ゲーム','スマホゲーム','アーケードゲーム','音ゲー','リズムゲーム','格闘ゲーム','レースゲーム','パズルゲーム',
-'シューティングゲーム','アクションゲーム','RPG','シミュレーションゲーム','スポーツゲーム','オンラインゲーム','協力プレイ','対戦プレイ','eスポーツ','ドラえもん','のび太','しずか','ジャイアン','スネ夫','ドラミ','クレヨンしんちゃん','野原しんのすけ','野原みさえ','野原ひろし',
-'サザエさん','フグ田サザエ','マスオ','カツオ','ワカメ','タラちゃん','ちびまる子ちゃん','まる子','たまちゃん','花輪くん',
-'名探偵コナン','江戸川コナン','工藤新一','毛利蘭','毛利小五郎','灰原哀','怪盗キッド','服部平次','ドラゴンボール','孫悟空',
-'ベジータ','ピッコロ','悟飯','フリーザ','セル','魔人ブウ','ワンピース','ルフィ','ゾロ','ナミ',
-'ウソップ','サンジ','チョッパー','ロビン','フランキー','ブルック','進撃の巨人','エレン','ミカサ','アルミン',
-'リヴァイ','ハンジ','ナルト','うずまきナルト','サスケ','サクラ','カカシ','ボルト','鬼滅の刃','竈門炭治郎',
-'竈門禰豆子','我妻善逸','嘴平伊之助','冨岡義勇','胡蝶しのぶ','煉獄杏寿郎','呪術廻戦','虎杖悠仁','伏黒恵','釘崎野薔薇',
-'五条悟','夏油傑','スパイファミリー','アーニャ','ロイド','ヨル','ボンド','ポケモン','ピカチュウ','イーブイ',
-'リザードン','ミュウツー','サトシ','カスミ','タケシ','となりのトトロ','トトロ','メイ','サツキ','ねこバス',
-'千と千尋の神隠し','千尋','ハク','カオナシ','湯婆婆','もののけ姫','アシタカ','サン','ナウシカ','風の谷のナウシカ',
-'魔女の宅急便','キキ','ジジ','天空の城ラピュタ','パズー','シータ','ムスカ','ハウルの動く城','ハウル','ソフィー',
-'ルパン三世','ルパン','次元','五ェ門','不二子','銭形','アンパンマン','アンパンマン','ばいきんまん','ドキンちゃん',
-'しょくぱんまん','カレーパンマン','ドラゴンクエスト','スライム','勇者','魔王','ファイナルファンタジー','クラウド','セフィロス','チョコボ',
-'マリオ','ルイージ','ピーチ','クッパ','ヨッシー','ドンキーコング','ゼルダの伝説','リンク','ゼルダ','ガノンドロフ',
-'星のカービィ','カービィ','デデデ','メタナイト','スマブラ','どうぶつの森','たぬきち','しずえ','マインクラフト','クリーパー',
-'スティーブ','エンダーマン','スーパーマン','バットマン','スパイダーマン','アイアンマン','キャプテンアメリカ','ハルク','ソー','アベンジャーズ',
-'スターウォーズ','ダースベイダー','ルーク','レイア','ヨーダ','R2D2','C3PO','ハリーポッター','ハリー','ロン',
-'ハーマイオニー','ダンブルドア','ヴォルデモート','バックトゥザフューチャー','マーティ','ドク','タイタニック','ジャック','ローズ','ジュラシックパーク',
-'恐竜','E.T.','インディジョーンズ','ロードオブザリング','フロド','ガンダルフ','ゴラム','トイストーリー','ウッディ','バズ',
-'ジェシー','リトルグリーンメン','アナと雪の女王','アナ','エルサ','オラフ','ラプンツェル','白雪姫','シンデレラ','アリエル',
-'ベル','野獣','アラジン','ジャスミン','ジーニー','ミッキーマウス','ミニーマウス','ドナルドダック','グーフィー','プーさん',
-'ピノキオ','ダンボ','バンビ','ピーターパン','ティンカーベル','モンスターズインク','サリー','マイク','カーズ','ライトニングマックィーン',
-'名探偵ピカチュウ','デスノート','夜神月','L','鋼の錬金術師','エドワード','アルフォンス','ハガレン','コードギアス','ルルーシュ',
-'エヴァンゲリオン','シンジ','レイ','アスカ','ガンダム','アムロ','シャア','銀魂','坂田銀時','神楽',
-'新世紀エヴァンゲリオン','シティーハンター','冴羽獠','北斗の拳','ケンシロウ','セーラームーン','月野うさぎ','セーラームーンR','カードキャプターさくら','木之本桜','晴れ','くもり','雨','雪','雷','台風','嵐','霧','風','強風',
-'虹','夕焼け','朝焼け','青空','星空','月','太陽','雲','霜','霧雨',
-'山','川','海','湖','森','林','砂浜','島','滝','氷','織田信長','豊臣秀吉','徳川家康','明智光秀','伊達政宗','武田信玄','上杉謙信','真田幸村','石田三成','徳川慶喜',
-'坂本龍馬','西郷隆盛','大久保利通','木戸孝允','勝海舟','新選組','近藤勇','土方歳三','沖田総司','源義経',
-'源頼朝','平清盛','聖徳太子','紫式部','清少納言','藤原道長','足利尊氏','足利義満','北条時宗','後醍醐天皇',
-
-'徳川綱吉','徳川光圀','水戸黄門','松尾芭蕉','与謝蕪村','小林一茶','夏目漱石','森鴎外','芥川龍之介','太宰治',
-'川端康成','三島由紀夫','宮沢賢治','樋口一葉','石川啄木','福沢諭吉','渋沢栄一','新渡戸稲造','伊藤博文','大隈重信',
-
-'昭和天皇','明仁上皇','徳仁天皇','卑弥呼','聖武天皇','鑑真','空海','最澄','親鸞','日蓮',
-'西田幾多郎','岡本太郎','手塚治虫','藤子・F・不二雄','鳥山明','宮崎駿','黒澤明','北野武','大友克洋','庵野秀明',
-
-'マイケルジャクソン','エルビスプレスリー','ビートルズ','ジョンレノン','ポールマッカートニー','ボブディラン','マドンナ','プリンス','テイラースウィフト','アリアナグランデ',
-'ビヨンセ','レディーガガ','ブルーノマーズ','エドシーラン','アデル','ジャスティンビーバー','リアーナ','ケイティペリー','ビリーアイリッシュ','オリビアロドリゴ',
-
-'チャーリーチャップリン','マリリンモンロー','オードリーヘップバーン','トムクルーズ','ブラッドピット','レオナルドディカプリオ','ジョニーデップ','ロバートダウニーJr','クリスエヴァンス','スカーレットヨハンソン',
-
-'ウォルトディズニー','スティーブジョブズ','ビルゲイツ','イーロンマスク','マークザッカーバーグ','ジェフベゾス','ラリーエリソン','サムアルトマン','孫正義','柳井正',
-
-'アルベルトアインシュタイン','アイザックニュートン','ガリレオガリレイ','ニコラテスラ','トーマスエジソン','アレクサンダーグラハムベル','ライト兄弟','マリキュリー','マリキュリー','ダーウィン',
-
-'アリストテレス','プラトン','ソクラテス','デカルト','カント','ニーチェ','マルクス','フロイト','ユング','ショーペンハウアー',
-
-'ナポレオン','ジャンヌダルク','ルイ14世','マリーアントワネット','シャルルドゴール','リンカーン','ワシントン','ルーズベルト','ケネディ','オバマ',
-'トランプ','バイデン','チャーチル','ヒトラー','ムッソリーニ','スターリン','ゴルバチョフ','プーチン','ゼレンスキー','毛沢東',
-
-'孔子','孟子','老子','孫子','始皇帝','劉邦','項羽','曹操','劉備','諸葛亮',
-'関羽','張飛','司馬懿','楊貴妃','則天武后','康熙帝','乾隆帝','溥儀','蒋介石','鄧小平',
-
-'ガンジー','ネルー','マザーテレサ','キング牧師','ネルソンマンデラ','チェゲバラ','カストロ','サッチャー','メルケル','マクロン',
-
-'アレクサンドロス大王','ハンニバル','カエサル','クレオパトラ','ラムセス2世','ツタンカーメン','レオナルドダヴィンチ','ミケランジェロ','ラファエロ','ゴッホ',
-'ピカソ','モネ','ダリ','ベートーヴェン','モーツァルト','バッハ','ショパン','チャイコフスキー','ヴィヴァルディ','シューベルト',
-
-'コロンブス','マゼラン','アムンゼン','クック船長','リンドバーグ','アームストロング','ガガーリン','イーロンマスク','ホーキング','カールセーガン'];
-
-  const pool = [...allWords];
-  const selected = [];
-  for (let i = 0; i < 3 && pool.length; i++) {
-    const j = Math.floor(Math.random() * pool.length);
-    selected.push(pool.splice(j, 1)[0]);
+    'ゴリラ','りす','ねこ','いぬ','とり','さかな','はと','うさぎ','かめ','さる',
+    'トイレ','洗面台','風呂','シャワー','浴槽','鏡','蛇口','排水口','歯ブラシ','歯磨き粉',
+    '机','椅子','ソファ','テーブル','ベッド','布団','枕',
+    '先生','学生','赤ちゃん','医者','警察官','市長',
+    '日本','東京','大阪','中国','北京','上海','アメリカ','フランス',
+  ];
+
+  function pickUnique(arr, count){
+    const pool = [...arr];
+    for (let i = pool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, Math.min(count, pool.length));
   }
+
+  const choices = pickUnique(allWords, 4);
 
   await set(ref(db, `rooms/${state.roomCode}/master`), {
     id: masterId,
-    choices: selected,
+    choices,
+    chosen: null,
+    chosenAt: null,
+    durationSec: null,
     timerPaused: false,
     boardOpenToAll: false
   });
+
+  await set(ref(db, `rooms/${state.roomCode}/ui/masterIcons`), { left: 0.2, right: 0.2 });
+
+  await set(ref(db, `rooms/${state.roomCode}/reveal`), null);
+  await set(ref(db, `rooms/${state.roomCode}/vote`), null);
+
+  syncWolfPickingClass();
+  syncVotePickingClass();
 }
 
 /* =========================
-   ★ リセット（ホストのみ）
+   ★ ホスト：設定ポップ
    ========================= */
-async function resetGameToHostSelect(){
-  if (!state.roomCode) return;
-  if (!state.isHost) return;
-
-  const base = `rooms/${state.roomCode}`;
-  const updates = {};
-
-  // ★ 全員UI強制リセット用キー（まず更新）
-  updates[`${base}/gameKey`] = Date.now();
-
-  // ★ 左右アイコンも「全員に」50%へ（DB側を正として戻す）
-  updates[`${base}/ui/masterIcons`] = { left: 0.2, right: 0.2 };
-
-  updates[`${base}/hands`] = null;
-  updates[`${base}/master`] = null;
-  updates[`${base}/reveal`] = null;
-  updates[`${base}/vote`] = null;
-
-  updates[`${base}/tables`] = null;
-  updates[`${base}/maxPlayers`] = null;
-
-  await update(ref(db), updates);
-
-  // ローカル側も即リセット（ホスト画面の体感を良くする）
-  resetAllPopsLocal();
-
-  state.seatedTable = null;
-  state.seatPopDismissed = false;
-
-  latestRoomMeta = (await get(ref(db, `${base}`))).val() || {};
-  latestTablesRaw = (await get(ref(db, `${base}/tables`))).val() || {};
-  await renderSeatTabsLive(latestRoomMeta, latestTablesRaw);
-  seatPop.classList.remove('hidden');
-  syncSeatPopVisibility();
-
-  startPop.classList.add('hidden');
-}
-
-/* ホスト設定ボタン */
-hostSettingsBtn.addEventListener('click', () => {
+hostSettingsBtn?.addEventListener('click', () => {
   if (!state.isHost) return;
   startPop.classList.toggle('hidden');
 });
+btnStartPopClose?.addEventListener('click', () => startPop.classList.add('hidden'));
 
-btnStartPopClose.addEventListener('click', () => {
-  startPop.classList.add('hidden');
-});
-
-/* ★ リセット */
-btnGameReset?.addEventListener('click', async () => {
-  await resetGameToHostSelect();
-});
-
-/* ゲームスタート */
-btnGameStart.addEventListener('click', async () => {
+/* スタート */
+btnGameStart?.addEventListener('click', async () => {
+  if (!state.roomCode) return;
   if (!state.isHost) return;
 
-  // ★ スタートし直すとき：出ているポップ等を全員で強制リセット（封印解除も含む）
-  await update(ref(db, `rooms/${state.roomCode}`), { gameKey: Date.now() });
-
-  // ★ スタート時も左右アイコンを「全員に」50%へ（DB側）
-  await set(ref(db, `rooms/${state.roomCode}/ui/masterIcons`), { left: 0.2, right: 0.2 });
-
-  // ローカルも即50%
-  resetMasterIconsOpacityLocal();
+  await set(ref(db, `rooms/${state.roomCode}/gameKey`), Date.now());
 
   await dealInitialHands();
   await chooseRandomMasterAndWords();
+
   startPop.classList.add('hidden');
+});
+
+/* リセット（席/人数は残してゲームだけリセット） */
+btnGameReset?.addEventListener('click', async () => {
+  if (!state.roomCode) return;
+  if (!state.isHost) return;
+
+  await set(ref(db, `rooms/${state.roomCode}/gameKey`), Date.now());
+  await set(ref(db, `rooms/${state.roomCode}/hands`), null);
+  await set(ref(db, `rooms/${state.roomCode}/master`), null);
+  await set(ref(db, `rooms/${state.roomCode}/reveal`), null);
+  await set(ref(db, `rooms/${state.roomCode}/vote`), null);
+  await set(ref(db, `rooms/${state.roomCode}/ui/masterIcons`), { left: 0.2, right: 0.2 });
+
+  startPop.classList.add('hidden');
+
+  syncWolfPickingClass();
+  syncVotePickingClass();
 });
 </script>
 
 </body>
 </html>
-
-
-
-
