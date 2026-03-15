@@ -2571,7 +2571,7 @@ function updatePlayerCircleUI(players){
     ui.tag.style.top  = `${y}%`;
 
     const isMe = (p.id === state.userId);
-    const isMasterPlayer = (p.id === state.masterId);
+    const isMasterPlayer = (!!state.masterId && p.id === state.masterId);
 
     ui.tag.classList.toggle('me', isMe);
 
@@ -2611,8 +2611,9 @@ function updatePlayerCircleUI(players){
     ui.miniHand.style.display = hasRoleCard ? '' : 'none';
     ui.roleMini.classList.toggle('hidden', !hasRoleCard);
 
-    // 市長カード（その人が市長なら表示）
-    ui.mayorMini.classList.toggle('hidden', !isMasterPlayer);
+    // 市長カード（その人が市長 かつ ミニ手札を表示中のときだけ表示）
+    const showMayorMini = (hasRoleCard && isMasterPlayer);
+    ui.mayorMini.classList.toggle('hidden', !showMayorMini);
 
     if (hasRoleCard){
       const role = handData.cards[0];
