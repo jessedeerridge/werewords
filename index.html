@@ -2451,7 +2451,7 @@ function renderMyHand(){
    ========================================================= */
 const circleCache = {
   key: '',
-  tagsById: new Map(),   // uid -> { tag, nameEl, miniHand, roleMini, mailEl, countEl }
+  tagsById: new Map(),   // uid -> { tag, nameEl, miniHand, mayorMini, roleMini, mailEl, countEl }
 };
 
 function playersKey(players){
@@ -2496,6 +2496,13 @@ function buildPlayerCircleDOM(players){
     const miniHand = document.createElement('div');
     miniHand.className = 'mini-hand';
 
+    // mayor mini（本物の市長プレイヤーにのみ表示）
+    const mayorMini = document.createElement('div');
+    mayorMini.className = 'mini-card revealed mayor-mini hidden';
+    mayorMini.style.backgroundImage = 'url("mayor.jpg")';
+    mayorMini.style.zIndex = '13';
+    miniHand.appendChild(mayorMini);
+
     // role mini（常設：手札が無い場合は隠す）
     const roleMini = document.createElement('div');
     roleMini.className = 'mini-card role-mini hidden';
@@ -2510,6 +2517,7 @@ function buildPlayerCircleDOM(players){
       tag,
       nameEl: nameSpan,
       miniHand,
+      mayorMini,
       roleMini,
       mailEl: mail,
       countEl: count
@@ -2601,6 +2609,9 @@ function updatePlayerCircleUI(players){
 
     ui.miniHand.style.display = hasRoleCard ? '' : 'none';
     ui.roleMini.classList.toggle('hidden', !hasRoleCard);
+
+    const showMayorMini = !!(hasRoleCard && p.id === state.masterId);
+    ui.mayorMini.classList.toggle('hidden', !showMayorMini);
 
     if (hasRoleCard){
       const role = handData.cards[0];
