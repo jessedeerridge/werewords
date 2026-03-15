@@ -1803,7 +1803,7 @@ function renderMasterPop(){
     btn.onclick = async () => {
       if (!state.roomCode) return;
 
-      const durationSec = 4 * 1;
+      const durationSec = 4 * 60;
       const chosenAt = Date.now();
 
       const mRef = ref(db, `rooms/${state.roomCode}/master`);
