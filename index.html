@@ -269,6 +269,11 @@ body.in-room .master-icons{ display:block; }
   transform-origin:center;
 }
 
+/* hidden を .mini-card の display より優先する */
+.player-tag .mini-card.hidden{
+  display:none;
+}
+
 /* ★ 枠の内側に白い細い枠（裏向き用） */
 .player-tag .mini-card.role-mini:not(.revealed)::after{
   content:'';
