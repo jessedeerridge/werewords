@@ -226,10 +226,10 @@ body.in-room .master-icons{ display:block; }
 }
 
 /* =========================
-   ★ 他プレイヤーのミニカード（2.4倍）＆中央寄せ横並び
+   ★ 他プレイヤーのミニカード（2.88倍）＆中央寄せ横並び
    ========================= */
 :root{
-  --mini-scale: 2.4;
+  --mini-scale: 2.88;
   --mini-w: calc(16px * var(--mini-scale));
   --mini-h: calc(22px * var(--mini-scale));
   --mini-gap: 8px;
@@ -250,7 +250,7 @@ body.in-room .master-icons{ display:block; }
   padding:0;
 }
 
-/* ミニカード：裏面も表面も同サイズ（2.4倍） */
+/* ミニカード：裏面も表面も同サイズ（2.88倍） */
 .player-tag .mini-card{
   position:relative;
   width:var(--mini-w);
@@ -318,33 +318,36 @@ body.in-room .master-icons{ display:block; }
 
 /* =========================
    ★ 追加：狼の「正体カードクリック」モード
-   - 待機中は 1 ↔ 1.5 の脈動
+   - プレイヤー円で共有する控えめな脈動
    ★ 重要：DOMを作り直さない（JS側で差分更新）ので脈動が途切れない
    ========================= */
+@property --card-pulse-scale{
+  syntax:'<number>';
+  inherits:true;
+  initial-value:1;
+}
+.player-circle{
+  animation:cardPickPulse 1.2s ease-in-out infinite;
+}
 body.wolf-picking .player-tag .mini-hand{ pointer-events:auto; }
 body.wolf-picking .player-tag .mini-card.role-mini{ cursor:pointer; }
 body.wolf-picking .player-tag .mini-card.role-mini.wolf-pick-pulse{
-  animation:wolfPickPulse .8s ease-in-out infinite;
+  transform:scale(var(--card-pulse-scale));
 }
-@keyframes wolfPickPulse{
-  0%{ transform:scale(1); }
-  50%{ transform:scale(1.5); }
-  100%{ transform:scale(1); }
+@keyframes cardPickPulse{
+  0%{ --card-pulse-scale:1; }
+  50%{ --card-pulse-scale:1.16; }
+  100%{ --card-pulse-scale:1; }
 }
 
 /* =========================
    ★ 追加：投票の「正体カードクリック」モード
-   - 待機中は 1 ↔ 1.4 の脈動
+   - 狼の選択と同じタイミングで脈動
    ========================= */
 body.vote-picking .player-tag .mini-hand{ pointer-events:auto; }
 body.vote-picking .player-tag .mini-card.role-mini{ cursor:pointer; }
 body.vote-picking .player-tag .mini-card.role-mini.vote-pick-pulse{
-  animation:votePickPulse .85s ease-in-out infinite;
-}
-@keyframes votePickPulse{
-  0%{ transform:scale(1); }
-  50%{ transform:scale(1.4); }
-  100%{ transform:scale(1); }
+  transform:scale(var(--card-pulse-scale));
 }
 
 /* 自分の手札 */
@@ -1128,7 +1131,7 @@ body.entrance-screen main::before{
 <!-- マスター用：正解!! ボタン -->
 <button id="btnCorrect" class="correct-btn hidden">正解!!</button>
 <div id="timeupActions" class="timeup-actions hidden">
-  <button id="btnLastSecondCorrect" class="timeup-choice">ギリギリで正解！</button>
+  <button id="btnLastSecondCorrect" class="timeup-choice">ギリギリで<br>正解！</button>
   <button id="btnTimeupVote" class="timeup-choice">TIME UP</button>
 </div>
 
