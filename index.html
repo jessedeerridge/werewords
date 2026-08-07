@@ -40,8 +40,6 @@ main{
   -webkit-overflow-scrolling:touch;
 }
 
-.join-box{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:12px;}
-.join-box input{padding:8px;border:1px solid #ddd;border-radius:6px;font-size:16px;}
 .btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#f8f8f8;cursor:pointer;}
 .btn.primary{background:#111;color:#fff;border-color:#111;}
 .btn.ghost{ background:#111;color:#fff;border-color:#111; }
@@ -267,6 +265,11 @@ body.in-room .master-icons{ display:block; }
   align-items:center;
   justify-content:center;
   transform-origin:center;
+}
+
+/* hidden を .mini-card の display より優先する */
+.player-tag .mini-card.hidden{
+  display:none;
 }
 
 /* ★ 枠の内側に白い細い枠（裏向き用） */
@@ -563,18 +566,15 @@ body.vote-picking .player-tag .mini-card.role-mini.vote-pick-pulse{
   box-shadow:0 18px 40px rgba(0,0,0,.35);
   overflow:hidden;
   display:flex;
+  padding:10px;
+  border:3px solid transparent;
+  box-sizing:border-box;
 }
 
 /* 権限あり：二重線枠 */
 .topic-board-inner.white{
   background:#fff;
-  padding:10px;
-  border-radius:10px;
-  border:3px solid #111;
-  position:relative;
-  width:100%;
-  height:100%;
-  box-sizing:border-box;
+  border-color:#111;
 }
 .topic-board-inner.white::before{
   content:'';
@@ -589,10 +589,7 @@ body.vote-picking .player-tag .mini-card.role-mini.vote-pick-pulse{
 /* 権限なし：茶 */
 .topic-board-inner.brown{
   background:linear-gradient(135deg,#8b5a2b,#6f3f1d);
-  border:4px solid rgba(255,255,255,.18);
-  width:100%;
-  height:100%;
-  box-sizing:border-box;
+  border-color:rgba(255,255,255,.18);
 }
 
 /* 中の板 */
@@ -655,6 +652,37 @@ body.vote-picking .player-tag .mini-card.role-mini.vote-pick-pulse{
   z-index:270;
 }
 .correct-btn:active{ transform:translateX(-50%) scale(.98); }
+.correct-btn.hold-active,
+.timeup-choice.hold-active{
+  box-shadow:0 0 0 6px rgba(246,196,0,.55),0 12px 28px rgba(0,0,0,.22);
+  transform:translateX(-50%) scale(.96);
+}
+.timeup-actions{
+  position:fixed;
+  left:50%;
+  bottom:16px;
+  transform:translateX(-50%);
+  display:flex;
+  gap:14px;
+  z-index:275;
+}
+.timeup-actions.hidden{display:none;}
+.timeup-choice{
+  width:104px;
+  height:104px;
+  border-radius:50%;
+  border:2px solid #111;
+  background:#5C3B54;
+  color:#fff;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.25;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+  cursor:pointer;
+  user-select:none;
+  touch-action:none;
+}
+.timeup-choice.hold-active{transform:scale(.96);}
 
 /* =========================
    ★ 下部黒ポップ（黒背景白字）
@@ -889,17 +917,159 @@ body.in-room .help-btn{ display:flex; }
   white-space:pre-wrap;
 }
 
-/* ★ 入室前のmain背景（デフォルト） */
-body:not(.in-room) main{
-  background-image: url("weretop.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: local;
+/* 入室画面 */
+body.entrance-screen{
+  height:100dvh;
+  overflow:hidden;
 }
+body.entrance-screen header,
+body.entrance-screen main > :not(.room-browser){
+  display:none;
+}
+body.entrance-screen main{
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  padding:0;
+  position:relative;
+  overflow:hidden;
+}
+body.entrance-screen main::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:url("weretop.jpg") center/cover no-repeat;
+  opacity:.4;
+  pointer-events:none;
+}
+#createRoomSlot{width:100%;}
+.room-browser.hidden{display:none;}
+.room-browser{
+  position:absolute;
+  left:50%;
+  top:calc(44% + 150px);
+  transform:translate(-50%,-50%);
+  width:min(88vw,420px);
+  height:min(70dvh,590px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  z-index:2;
+}
+.entrance-card{
+  position:relative;
+  width:100%;
+  height:76px;
+  min-height:76px;
+  margin:0 0 10px;
+  border:1px solid rgba(0,0,0,.7);
+  border-radius:10px;
+  padding:10px 12px;
+  box-shadow:0 3px 12px rgba(0,0,0,.1);
+  font-family:"Noto Sans JP","Yu Gothic",sans-serif;
+  color:#111;
+  box-sizing:border-box;
+}
+.create-room-card{
+  background:rgba(0,0,0,.72);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:21px;
+  font-weight:700;
+  letter-spacing:.08em;
+  cursor:pointer;
+}
+.room-card{
+  background:rgba(255,255,255,.72);
+  text-align:left;
+  display:block;
+  cursor:pointer;
+}
+.entrance-loading{
+  width:100%;
+  height:28px;
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  font-size:13px;
+  color:#555;
+}
+.entrance-loading.hidden{display:none;}
+.room-list{
+  width:100%;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  max-height:calc((76px + 10px) * var(--visible-room-count));
+}
+.room-list::-webkit-scrollbar{display:none;}
+.room-members{
+  display:block;
+  padding-right:2px;
+  font-size:15px;
+  font-weight:650;
+  color:#111;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.room-meta{
+  position:absolute;
+  right:10px;
+  bottom:7px;
+  display:flex;
+  gap:8px;
+  font-size:11px;
+  color:#111;
+  white-space:nowrap;
+}
+.entrance-name-form{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  padding:0;
+}
+.entrance-name-form input{
+  min-width:0;
+  flex:1;
+  height:40px;
+  border:1px solid rgba(0,0,0,.55);
+  border-radius:7px 0 0 7px;
+  padding:7px 10px;
+  background:rgba(255,255,255,.9);
+  font-family:"Noto Sans JP","Yu Gothic",sans-serif;
+  font-size:16px;
+  font-weight:500;
+  color:#111;
+  box-sizing:border-box;
+}
+.entrance-name-form input::placeholder{color:rgba(17,17,17,.35);}
+.entrance-name-form button{
+  height:40px;
+  min-width:62px;
+  padding:0 14px;
+  border:1px solid rgba(0,0,0,.75);
+  border-left:0;
+  border-radius:0 7px 7px 0;
+  background:#111;
+  color:#fff;
+  font-family:"Noto Sans JP","Yu Gothic",sans-serif;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+.entrance-name-form button:disabled{cursor:wait;opacity:.65;}
+
 </style>
 </head>
-<body>
+<body class="entrance-screen">
 
 <header>
   <h1>ワーワーズ</h1>
@@ -933,11 +1103,11 @@ body:not(.in-room) main{
     </div>
   </div>
 
-  <div class="join-box" id="joinBox">
-    <input id="userName" placeholder="名前（4文字以内）" maxlength="4" />
-    <input id="roomCode" placeholder="ルームコード（未入力で自動生成）" maxlength="12" />
-    <button class="btn primary" id="btnJoin">入室</button>
-  </div>
+  <section class="room-browser" id="roomBrowser" aria-label="部屋を選択">
+    <div id="createRoomSlot"></div>
+    <div id="entranceLoading" class="entrance-loading">loading...</div>
+    <div id="roomList" class="room-list"></div>
+  </section>
 
   <div id="lobby" class="hidden">
     <h2>ロビー</h2>
@@ -957,6 +1127,10 @@ body:not(.in-room) main{
 
 <!-- マスター用：正解!! ボタン -->
 <button id="btnCorrect" class="correct-btn hidden">正解!!</button>
+<div id="timeupActions" class="timeup-actions hidden">
+  <button id="btnLastSecondCorrect" class="timeup-choice">ギリギリで正解！</button>
+  <button id="btnTimeupVote" class="timeup-choice">TIME UP</button>
+</div>
 
 <!-- 画面下部：黒背景白字ポップ -->
 <div id="bottomPop" class="bottom-pop hidden">
@@ -1143,10 +1317,16 @@ const state = {
   masterIcons: { left: 0.2, right: 0.2 },
 };
 
-const joinBox = document.getElementById('joinBox');
-const inputName = document.getElementById('userName');
-const inputCode = document.getElementById('roomCode');
-const btnJoin = document.getElementById('btnJoin');
+const roomBrowser = document.getElementById('roomBrowser');
+const createRoomSlot = document.getElementById('createRoomSlot');
+const entranceLoading = document.getElementById('entranceLoading');
+const roomList = document.getElementById('roomList');
+let btnCreateRoom = null;
+let entranceRooms = [];
+const visibleRoomCount = 5;
+roomBrowser.style.setProperty('--visible-room-count', visibleRoomCount);
+let activeEntranceCode = null;
+let entranceRoomsLoaded = false;
 const lobby = document.getElementById('lobby');
 const roomInfo = document.getElementById('roomInfo');
 const roomInfoLobby = document.getElementById('roomInfoLobby');
@@ -1183,6 +1363,10 @@ const topicBoardText = document.getElementById('topicBoardText');
 
 /* 正解!!ボタン */
 const btnCorrect = document.getElementById('btnCorrect');
+const timeupActions = document.getElementById('timeupActions');
+const btnLastSecondCorrect = document.getElementById('btnLastSecondCorrect');
+const btnTimeupVote = document.getElementById('btnTimeupVote');
+let timeupDecisionPending = false;
 
 /* 下部ポップ＆中央演出 */
 const bottomPop = document.getElementById('bottomPop');
@@ -1391,6 +1575,8 @@ function resetAllPopsLocal(){
     timeupPop.classList.add('hidden');
     timeupPop.classList.remove('show');
   }
+  timeupActions?.classList.add('hidden');
+  timeupDecisionPending = false;
 
   closeHelp();
   stopTimer();
@@ -1450,25 +1636,17 @@ function subscribeGameKey(){
 
 /* ▼ 0秒になったときのローカル処理 */
 function onTimerEndLocal(){
-  showTimeupPop();
-
   state.correctBtnLocked = true;
   updateCorrectBtnVisibility();
 
-  setTimeout(() => {
-    if (state.userId !== state.masterId) return;
-    if (!state.masterChosen) return;
-    if (state.boardOpenToAll) return;
-    if (state.reveal && state.reveal.phase) return;
-    if (state.vote && state.vote.phase) return;
-
-    if (!bottomPop.classList.contains('hidden') && state.bottomMode === 'correct' && !bottomPop.classList.contains('giri')){
-      hideBottomPop();
-    }
-
-    state.bottomMode = 'correct';
-    showBottomPop('ギリギリで正解したプレイヤーがいますか？', true);
-  }, 500);
+  if (state.userId === state.masterId && state.masterChosen &&
+      !state.boardOpenToAll && !state.reveal?.phase && !state.vote?.phase) {
+    hideBottomPop();
+    timeupActions.classList.remove('hidden');
+  } else if (!state.reveal?.phase && !state.vote?.phase) {
+    state.bottomMode = 'timeupWaiting';
+    showBottomPop('市長が判定中…', false);
+  }
 }
 
 function clearRevealTimers(){
@@ -1730,11 +1908,18 @@ function subscribeHands(){
   });
 }
 
+let masterSnapshotVersion = 0;
+
 function subscribeMaster(){
   if (!state.roomCode) return;
   const mRef = ref(db, `rooms/${state.roomCode}/master`);
-  onValue(mRef, snap => {
+  onValue(mRef, async snap => {
+    const version = ++masterSnapshotVersion;
     const m = snap.val();
+
+    // Hide until the role snapshot for this master state has been confirmed.
+    topicBoard.classList.add('hidden');
+    topicBoardText.textContent = '';
 
     if (!m || !m.id) {
       state.masterId = null;
@@ -1755,6 +1940,12 @@ function subscribeMaster(){
       syncSeatPopVisibility();
       updateMasterIconInteractivity();
       return;
+    }
+
+    if (m.chosen) {
+      const handsSnap = await get(ref(db, `rooms/${state.roomCode}/hands`));
+      if (version !== masterSnapshotVersion) return;
+      state.hands = handsSnap.val() || {};
     }
 
     state.masterId = m.id;
@@ -2133,6 +2324,12 @@ function subscribeReveal(){
 async function handleCorrectConfirmed(){
   if (!state.roomCode) return;
   if (state.userId !== state.masterId) return;
+  if (state.reveal?.phase || state.vote?.phase) return;
+
+  state.correctBtnLocked = true;
+  updateCorrectBtnVisibility();
+  timeupActions?.classList.add('hidden');
+  hideBottomPop();
 
   const mRef = ref(db, `rooms/${state.roomCode}/master`);
   await update(mRef, { boardOpenToAll: true });
@@ -2375,31 +2572,12 @@ function subscribeVote(){
    ★ ボタンイベント（仕様反映）
    ========================= */
 btnGuessNo?.addEventListener('click', async () => {
-  if (state.bottomMode === 'correct'){
-    const isGiri = bottomPop?.classList.contains('giri');
-    hideBottomPop();
-
-    if (isGiri){
-      if (state.userId === state.masterId){
-        await update(ref(db, `rooms/${state.roomCode}/master`), { boardOpenToAll: true });
-      }
-      await startVotePhaseFromMaster();
-    }
-    return;
-  }
-
   hideBottomPop();
   updateHostSelectingPop();
   updateMasterChoosingPop();
 });
 
 btnGuessYes?.addEventListener('click', async () => {
-  if (state.bottomMode === 'correct') {
-    hideBottomPop();
-    await handleCorrectConfirmed();
-    return;
-  }
-
   const targetId = state._guessPendingTargetId;
   if (!targetId || !state.roomCode) return;
 
@@ -2719,23 +2897,64 @@ function renderHands(){
   updateMasterChoosingPop();
 }
 
-/* 正解!!クリック */
-btnCorrect?.addEventListener('click', async () => {
-  if (!state.roomCode) return;
-  if (state.userId !== state.masterId) return;
-  if (state.correctBtnLocked) return;
+/* 1秒長押しで判定 */
+function attachHoldAction(button, action){
+  let timerId = null;
+  let completed = false;
 
-  const wolfId = getWolfIdFromHands();
-  if (!wolfId) return;
+  const cancel = () => {
+    if (timerId) clearTimeout(timerId);
+    timerId = null;
+    button.classList.remove('hold-active');
+  };
 
-  state.bottomMode = 'correct';
-  showBottomPop('誰かが正解しましたか？', true);
+  button.addEventListener('pointerdown', event => {
+    if (button.disabled || completed) return;
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    button.classList.add('hold-active');
+    timerId = setTimeout(async () => {
+      timerId = null;
+      completed = true;
+      button.disabled = true;
+      button.classList.remove('hold-active');
+      try {
+        await action();
+      } finally {
+        completed = false;
+        button.disabled = false;
+      }
+    }, 1000);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(type => button.addEventListener(type, cancel));
+  button.addEventListener('contextmenu', event => event.preventDefault());
+}
+
+attachHoldAction(btnCorrect, async () => {
+  if (!state.roomCode || state.userId !== state.masterId || state.correctBtnLocked) return;
+  await handleCorrectConfirmed();
+});
+
+attachHoldAction(btnLastSecondCorrect, async () => {
+  if (state.userId !== state.masterId || timeupDecisionPending) return;
+  timeupDecisionPending = true;
+  timeupActions.classList.add('hidden');
+  await handleCorrectConfirmed();
+});
+
+attachHoldAction(btnTimeupVote, async () => {
+  if (state.userId !== state.masterId || timeupDecisionPending) return;
+  timeupDecisionPending = true;
+  timeupActions.classList.add('hidden');
+  hideBottomPop();
+  await update(ref(db, `rooms/${state.roomCode}/master`), { boardOpenToAll: true });
+  await startVotePhaseFromMaster();
 });
 
 /* URL から room= を復元 */
 const urlParams = new URLSearchParams(window.location.search);
 const roomFromUrl = urlParams.get('room');
-if(roomFromUrl) inputCode.value = roomFromUrl;
+if (roomFromUrl) activeEntranceCode = roomFromUrl;
 
 /* =========================
    ★ 席タブ描画（同期ライブ版）
@@ -2822,22 +3041,182 @@ btnSeatCancel.onclick = () => {
   state.seatedTable = null;
 };
 
-/* 入室 */
-btnJoin.addEventListener('click', async () => {
-  state.userName = inputName.value || '名無し';
-  state.roomCode = inputCode.value.trim() || generateRoomCode();
+/* 入室画面 */
+const HIRAGANA = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわ';
 
-  await set(ref(db, `rooms/${state.roomCode}/users/${state.userId}`), {
-    name: state.userName,
-    joinedAt: Date.now()
+function randomHiraganaName(){
+  return Array.from({length:4}, () => HIRAGANA[Math.floor(Math.random() * HIRAGANA.length)]).join('');
+}
+
+function formatRoomTime(createdAt){
+  const date = new Date(Number(createdAt) || 0);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  return `${month}/${day} ${hour}:${minute}`;
+}
+
+function getInitialEntranceName(){
+  return (localStorage.savedUserName || state.userName || '').slice(0, 4);
+}
+
+function makeEntranceNameForm(code){
+  const form = document.createElement('form');
+  form.className = 'entrance-name-form';
+
+  const input = document.createElement('input');
+  input.maxLength = 4;
+  input.setAttribute('aria-label', '名前');
+  input.placeholder = 'name';
+  input.value = getInitialEntranceName();
+  input.addEventListener('input', () => {
+    input.value = input.value.slice(0, 4);
+    if (input.value) localStorage.savedUserName = input.value;
+    else localStorage.removeItem('savedUserName');
   });
+
+  const submit = document.createElement('button');
+  submit.type = 'submit';
+  submit.textContent = '決定';
+  form.append(input, submit);
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    submit.disabled = true;
+    const typedName = input.value.trim().slice(0, 4);
+    const name = typedName || randomHiraganaName();
+    if (typedName) localStorage.savedUserName = typedName;
+
+    try {
+      if (code === '__create__') {
+        await createAndEnterRoom(name);
+      } else {
+        await enterRoom(code, name, false);
+      }
+    } catch (error) {
+      console.error('入室できませんでした', error);
+      submit.disabled = false;
+    }
+  });
+
+  queueMicrotask(() => input.focus());
+  return form;
+}
+
+function renderCreateRoomCard(){
+  createRoomSlot.innerHTML = '';
+  if (!entranceRoomsLoaded) return;
+
+  btnCreateRoom = document.createElement('button');
+  btnCreateRoom.type = 'button';
+  btnCreateRoom.className = 'entrance-card create-room-card';
+  if (activeEntranceCode === '__create__') {
+    btnCreateRoom.appendChild(makeEntranceNameForm('__create__'));
+  } else {
+    btnCreateRoom.textContent = 'CREATE ROOM';
+  }
+  btnCreateRoom.addEventListener('click', event => {
+    if (event.target.closest('.entrance-name-form')) return;
+    activeEntranceCode = '__create__';
+    renderCreateRoomCard();
+    renderEntranceRooms();
+  });
+  createRoomSlot.appendChild(btnCreateRoom);
+}
+
+function renderEntranceRooms(){
+  roomList.innerHTML = '';
+  entranceRooms.forEach(room => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'entrance-card room-card';
+    if (activeEntranceCode === room.code) {
+      card.appendChild(makeEntranceNameForm(room.code));
+    } else {
+      const members = document.createElement('span');
+      members.className = 'room-members';
+      members.textContent = room.names.join('・');
+      const meta = document.createElement('span');
+      meta.className = 'room-meta';
+      const code = document.createElement('span');
+      code.textContent = room.code;
+      const time = document.createElement('span');
+      time.textContent = formatRoomTime(room.createdAt);
+      meta.append(code, time);
+      card.append(members, meta);
+    }
+    card.addEventListener('click', event => {
+      if (event.target.closest('.entrance-name-form')) return;
+      activeEntranceCode = room.code;
+      renderCreateRoomCard();
+      renderEntranceRooms();
+    });
+    roomList.appendChild(card);
+  });
+}
+
+function orderedPlayerNames(room){
+  const players = room?.players || {};
+  return Object.entries(players)
+    .filter(([, player]) => String(player?.name || '').trim())
+    .sort(([a], [b]) => (a === room.hostId ? -1 : b === room.hostId ? 1 : 0))
+    .map(([, player]) => String(player.name).trim());
+}
+
+onValue(ref(db, 'rooms'), snapshot => {
+  const now = Date.now();
+  const sixHours = 6 * 60 * 60 * 1000;
+  const rooms = Object.entries(snapshot.val() || {}).map(([code, room]) => ({
+    code,
+    createdAt: Number(room?.createdAt) || 0,
+    names: orderedPlayerNames(room)
+  })).sort((a, b) => b.createdAt - a.createdAt);
+
+  entranceRooms = rooms.filter((room, index) => index < 3 || now - room.createdAt <= sixHours);
+  entranceRoomsLoaded = true;
+  entranceLoading.classList.add('hidden');
+  renderCreateRoomCard();
+  renderEntranceRooms();
+});
+
+async function generateUniqueRoomCode(){
+  while (true) {
+    const code = generateRoomCode(5);
+    const snapshot = await get(ref(db, `rooms/${code}`));
+    if (!snapshot.exists()) return code;
+  }
+}
+
+async function createAndEnterRoom(name){
+  const code = await generateUniqueRoomCode();
+  await set(ref(db, `rooms/${code}`), {
+    createdAt: Date.now(),
+    hostId: state.userId,
+    players: {[state.userId]: {name, joinedAt: Date.now()}}
+  });
+  await enterRoom(code, name, true);
+}
+
+async function enterRoom(code, name, creating){
+  state.userName = name;
+  state.roomCode = code;
+
+  if (!creating) {
+    await set(ref(db, `rooms/${code}/players/${state.userId}`), {
+      name: state.userName,
+      joinedAt: Date.now()
+    });
+  }
 
   const roomRef = ref(db, `rooms/${state.roomCode}`);
   const roomSnap = await get(roomRef);
   const roomData = roomSnap.val();
-
-  if(!roomData || !roomData.hostId){
-    await update(roomRef, { hostId: state.userId });
+  if (!roomData || !roomData.hostId){
+    await update(roomRef, {
+      hostId: state.userId,
+      createdAt: roomData?.createdAt || Date.now()
+    });
     state.isHost = true;
     state.hostId = state.userId;
   } else {
@@ -2846,18 +3225,16 @@ btnJoin.addEventListener('click', async () => {
   }
 
   updateHostUI();
-
-  joinBox.classList.add('hidden');
+  roomBrowser.classList.add('hidden');
   lobby.classList.remove('hidden');
   lobby.classList.add('entered');
+  document.body.classList.remove('entrance-screen');
   document.body.classList.add('in-room');
 
   resetMasterIconsOpacityLocal();
   updateMasterIconInteractivity();
-
   latestRoomMeta = (await get(ref(db, `rooms/${state.roomCode}`))).val() || {};
   latestTablesRaw = (await get(ref(db, `rooms/${state.roomCode}/tables`))).val() || {};
-
   await restoreSeatFromDB();
 
   if (state.seatedTable === null && !state.seatPopDismissed) {
@@ -2879,10 +3256,8 @@ btnJoin.addEventListener('click', async () => {
   subscribeMaster();
   subscribeReveal();
   subscribeVote();
-
   subscribeMasterIcons();
   subscribeGameKey();
-
   updateHostSelectingPop();
   updateMasterChoosingPop();
   syncSeatPopVisibility();
@@ -2890,7 +3265,7 @@ btnJoin.addEventListener('click', async () => {
   applyMasterIconOpacity();
   syncWolfPickingClass();
   syncVotePickingClass();
-});
+}
 
 /* リンクコピー */
 copyLinkBtn.addEventListener('click', async () => {
@@ -2899,7 +3274,6 @@ copyLinkBtn.addEventListener('click', async () => {
     await navigator.clipboard.writeText(url);
     copyLinkBtn.classList.add('copied');
     copyLinkBtn.textContent = 'COPIED';
-    inputCode.value = state.roomCode;
 
     setTimeout(()=>{
       copyLinkBtn.classList.remove('copied');
@@ -3046,6 +3420,9 @@ async function dealInitialHands(){
   }
 
   const roleDeck = shuffle(buildRoleDeck(n));
+
+  // Clear the previous word before roles change so it cannot flash for a new role.
+  await set(ref(db, `rooms/${state.roomCode}/master`), null);
 
   const hands = {};
   seated.forEach((p, i) => {
