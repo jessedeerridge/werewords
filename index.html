@@ -652,6 +652,37 @@ body.vote-picking .player-tag .mini-card.role-mini.vote-pick-pulse{
   z-index:270;
 }
 .correct-btn:active{ transform:translateX(-50%) scale(.98); }
+.correct-btn.hold-active,
+.timeup-choice.hold-active{
+  box-shadow:0 0 0 6px rgba(246,196,0,.55),0 12px 28px rgba(0,0,0,.22);
+  transform:translateX(-50%) scale(.96);
+}
+.timeup-actions{
+  position:fixed;
+  left:50%;
+  bottom:16px;
+  transform:translateX(-50%);
+  display:flex;
+  gap:14px;
+  z-index:275;
+}
+.timeup-actions.hidden{display:none;}
+.timeup-choice{
+  width:104px;
+  height:104px;
+  border-radius:50%;
+  border:2px solid #111;
+  background:#5C3B54;
+  color:#fff;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.25;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+  cursor:pointer;
+  user-select:none;
+  touch-action:none;
+}
+.timeup-choice.hold-active{transform:scale(.96);}
 
 /* =========================
    ★ 下部黒ポップ（黒背景白字）
@@ -1096,6 +1127,10 @@ body.entrance-screen main::before{
 
 <!-- マスター用：正解!! ボタン -->
 <button id="btnCorrect" class="correct-btn hidden">正解!!</button>
+<div id="timeupActions" class="timeup-actions hidden">
+  <button id="btnLastSecondCorrect" class="timeup-choice">ギリギリで正解！</button>
+  <button id="btnTimeupVote" class="timeup-choice">TIME UP</button>
+</div>
 
 <!-- 画面下部：黒背景白字ポップ -->
 <div id="bottomPop" class="bottom-pop hidden">
@@ -1328,6 +1363,10 @@ const topicBoardText = document.getElementById('topicBoardText');
 
 /* 正解!!ボタン */
 const btnCorrect = document.getElementById('btnCorrect');
+const timeupActions = document.getElementById('timeupActions');
+const btnLastSecondCorrect = document.getElementById('btnLastSecondCorrect');
+const btnTimeupVote = document.getElementById('btnTimeupVote');
+let timeupDecisionPending = false;
 
 /* 下部ポップ＆中央演出 */
 const bottomPop = document.getElementById('bottomPop');
@@ -1536,6 +1575,8 @@ function resetAllPopsLocal(){
     timeupPop.classList.add('hidden');
     timeupPop.classList.remove('show');
   }
+  timeupActions?.classList.add('hidden');
+  timeupDecisionPending = false;
 
   closeHelp();
   stopTimer();
@@ -1595,25 +1636,17 @@ function subscribeGameKey(){
 
 /* ▼ 0秒になったときのローカル処理 */
 function onTimerEndLocal(){
-  showTimeupPop();
-
   state.correctBtnLocked = true;
   updateCorrectBtnVisibility();
 
-  setTimeout(() => {
-    if (state.userId !== state.masterId) return;
-    if (!state.masterChosen) return;
-    if (state.boardOpenToAll) return;
-    if (state.reveal && state.reveal.phase) return;
-    if (state.vote && state.vote.phase) return;
-
-    if (!bottomPop.classList.contains('hidden') && state.bottomMode === 'correct' && !bottomPop.classList.contains('giri')){
-      hideBottomPop();
-    }
-
-    state.bottomMode = 'correct';
-    showBottomPop('ギリギリで正解したプレイヤーがいますか？', true);
-  }, 500);
+  if (state.userId === state.masterId && state.masterChosen &&
+      !state.boardOpenToAll && !state.reveal?.phase && !state.vote?.phase) {
+    hideBottomPop();
+    timeupActions.classList.remove('hidden');
+  } else if (!state.reveal?.phase && !state.vote?.phase) {
+    state.bottomMode = 'timeupWaiting';
+    showBottomPop('市長が判定中…', false);
+  }
 }
 
 function clearRevealTimers(){
@@ -2291,6 +2324,12 @@ function subscribeReveal(){
 async function handleCorrectConfirmed(){
   if (!state.roomCode) return;
   if (state.userId !== state.masterId) return;
+  if (state.reveal?.phase || state.vote?.phase) return;
+
+  state.correctBtnLocked = true;
+  updateCorrectBtnVisibility();
+  timeupActions?.classList.add('hidden');
+  hideBottomPop();
 
   const mRef = ref(db, `rooms/${state.roomCode}/master`);
   await update(mRef, { boardOpenToAll: true });
@@ -2533,31 +2572,12 @@ function subscribeVote(){
    ★ ボタンイベント（仕様反映）
    ========================= */
 btnGuessNo?.addEventListener('click', async () => {
-  if (state.bottomMode === 'correct'){
-    const isGiri = bottomPop?.classList.contains('giri');
-    hideBottomPop();
-
-    if (isGiri){
-      if (state.userId === state.masterId){
-        await update(ref(db, `rooms/${state.roomCode}/master`), { boardOpenToAll: true });
-      }
-      await startVotePhaseFromMaster();
-    }
-    return;
-  }
-
   hideBottomPop();
   updateHostSelectingPop();
   updateMasterChoosingPop();
 });
 
 btnGuessYes?.addEventListener('click', async () => {
-  if (state.bottomMode === 'correct') {
-    hideBottomPop();
-    await handleCorrectConfirmed();
-    return;
-  }
-
   const targetId = state._guessPendingTargetId;
   if (!targetId || !state.roomCode) return;
 
@@ -2877,17 +2897,58 @@ function renderHands(){
   updateMasterChoosingPop();
 }
 
-/* 正解!!クリック */
-btnCorrect?.addEventListener('click', async () => {
-  if (!state.roomCode) return;
-  if (state.userId !== state.masterId) return;
-  if (state.correctBtnLocked) return;
+/* 1秒長押しで判定 */
+function attachHoldAction(button, action){
+  let timerId = null;
+  let completed = false;
 
-  const wolfId = getWolfIdFromHands();
-  if (!wolfId) return;
+  const cancel = () => {
+    if (timerId) clearTimeout(timerId);
+    timerId = null;
+    button.classList.remove('hold-active');
+  };
 
-  state.bottomMode = 'correct';
-  showBottomPop('誰かが正解しましたか？', true);
+  button.addEventListener('pointerdown', event => {
+    if (button.disabled || completed) return;
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    button.classList.add('hold-active');
+    timerId = setTimeout(async () => {
+      timerId = null;
+      completed = true;
+      button.disabled = true;
+      button.classList.remove('hold-active');
+      try {
+        await action();
+      } finally {
+        completed = false;
+        button.disabled = false;
+      }
+    }, 1000);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(type => button.addEventListener(type, cancel));
+  button.addEventListener('contextmenu', event => event.preventDefault());
+}
+
+attachHoldAction(btnCorrect, async () => {
+  if (!state.roomCode || state.userId !== state.masterId || state.correctBtnLocked) return;
+  await handleCorrectConfirmed();
+});
+
+attachHoldAction(btnLastSecondCorrect, async () => {
+  if (state.userId !== state.masterId || timeupDecisionPending) return;
+  timeupDecisionPending = true;
+  timeupActions.classList.add('hidden');
+  await handleCorrectConfirmed();
+});
+
+attachHoldAction(btnTimeupVote, async () => {
+  if (state.userId !== state.masterId || timeupDecisionPending) return;
+  timeupDecisionPending = true;
+  timeupActions.classList.add('hidden');
+  hideBottomPop();
+  await update(ref(db, `rooms/${state.roomCode}/master`), { boardOpenToAll: true });
+  await startVotePhaseFromMaster();
 });
 
 /* URL から room= を復元 */
