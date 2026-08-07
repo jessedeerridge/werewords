@@ -316,6 +316,52 @@ body.in-room .master-icons{ display:block; }
   filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
 }
 
+/* 投票結果：投票先の右に、投票者を左向きの吹き出しで並べる */
+.vote-result-list{
+  position:absolute;
+  left:calc(100% + 12px);
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+  z-index:30;
+  pointer-events:none;
+}
+.vote-result-list.hidden{ display:none; }
+.vote-result-bubble{
+  position:relative;
+  padding:4px 9px;
+  border:1px solid #111;
+  border-radius:999px;
+  background:#fff;
+  color:#111;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.2;
+  white-space:nowrap;
+  box-shadow:0 3px 8px rgba(0,0,0,.16);
+}
+.vote-result-bubble::before{
+  content:'';
+  position:absolute;
+  right:100%;
+  top:50%;
+  transform:translateY(-50%);
+  border:5px solid transparent;
+  border-right-color:#111;
+}
+.vote-result-bubble::after{
+  content:'';
+  position:absolute;
+  right:calc(100% - 1px);
+  top:50%;
+  transform:translateY(-50%);
+  border:4px solid transparent;
+  border-right-color:#fff;
+}
+
 /* =========================
    ★ 追加：狼の「正体カードクリック」モード
    - プレイヤー円で共有する控えめな脈動
@@ -1640,6 +1686,7 @@ function subscribeGameKey(){
 /* ▼ 0秒になったときのローカル処理 */
 function onTimerEndLocal(){
   state.correctBtnLocked = true;
+  stopTimer();
   updateCorrectBtnVisibility();
 
   if (state.userId === state.masterId && state.masterChosen &&
@@ -1697,6 +1744,10 @@ function stopTimer(){
 
 function startLocalTimer(chosenAt, durationSec){
   if (!chosenAt || !durationSec || !timerBox || !timerText) return;
+  if (state.correctBtnLocked || state.reveal?.phase || state.vote?.phase) {
+    stopTimer();
+    return;
+  }
 
   const key = `${chosenAt}-${durationSec}`;
   if (currentTimerKey === key) return;
@@ -2103,7 +2154,8 @@ function getWolfIdFromHands(){
 function isRevealWolfCard(uid){
   const r = state.reveal;
   if (!r) return false;
-  return r.phase === 'wolf' && r.wolfId === uid;
+  const targetRole = state.hands?.[uid]?.cards?.[0];
+  return r.phase === 'wolf' && uid !== state.userId && targetRole === '狼';
 }
 function isRevealTargetCard(uid){
   const r = state.reveal;
@@ -2234,6 +2286,7 @@ function renderRevealUI(){
   }
 
   if (r.phase === 'wolf'){
+    stopTimer();
     clearRevealTimers();
     hideCenterReveal();
 
@@ -2330,6 +2383,7 @@ async function handleCorrectConfirmed(){
   if (state.reveal?.phase || state.vote?.phase) return;
 
   state.correctBtnLocked = true;
+  stopTimer();
   updateCorrectBtnVisibility();
   timeupActions?.classList.add('hidden');
   hideBottomPop();
@@ -2474,6 +2528,7 @@ function renderVoteUI(){
   }
 
   if (v.phase === 'voting'){
+    stopTimer();
     state.bottomMode = 'vote';
 
     const remain = voteRemainingSec();
@@ -2505,6 +2560,7 @@ function renderVoteUI(){
   }
 
   if (v.phase === 'result'){
+    stopTimer();
     clearVoteLocalTick();
     hideBottomPop();
 
@@ -2632,7 +2688,7 @@ function renderMyHand(){
    ========================================================= */
 const circleCache = {
   key: '',
-  tagsById: new Map(),   // uid -> { tag, nameEl, miniHand, mayorMini, roleMini, mailEl, countEl }
+  tagsById: new Map(),   // uid -> { tag, nameEl, miniHand, mayorMini, roleMini, mailEl, countEl, voteResultEl }
 };
 
 function playersKey(players){
@@ -2673,6 +2729,11 @@ function buildPlayerCircleDOM(players){
     count.textContent = '';
     tag.appendChild(count);
 
+    const voteResult = document.createElement('div');
+    voteResult.className = 'vote-result-list hidden';
+    voteResult.setAttribute('aria-label', 'このプレイヤーに投票した人');
+    tag.appendChild(voteResult);
+
     // ミニ手札
     const miniHand = document.createElement('div');
     miniHand.className = 'mini-hand';
@@ -2701,7 +2762,8 @@ function buildPlayerCircleDOM(players){
       mayorMini,
       roleMini,
       mailEl: mail,
-      countEl: count
+      countEl: count,
+      voteResultEl: voteResult
     });
   });
 
@@ -2726,7 +2788,18 @@ function updatePlayerCircleUI(players){
   const v = state.vote;
   const myVoted = voteHasMeVoted();
   const voters = (v && v.votes) ? Object.keys(v.votes).filter(uid => !!v.votes[uid]) : [];
-  const counts = (v && v.phase === 'result' && v.counts) ? v.counts : null;
+  const showingVoteResult = !!(v && v.phase === 'result');
+  const votesByTarget = new Map();
+  if (showingVoteResult && v.votes){
+    for (const [voterId, targetId] of Object.entries(v.votes)){
+      if (!targetId) continue;
+      const voterName = players.find(player => player.id === voterId)?.name;
+      if (!voterName) continue;
+      const names = votesByTarget.get(targetId) || [];
+      names.push(voterName);
+      votesByTarget.set(targetId, names);
+    }
+  }
 
   const n = players.length;
   const radius = 52;
@@ -2771,18 +2844,16 @@ function updatePlayerCircleUI(players){
       ui.mailEl.classList.add('hidden');
     }
 
-    // 票数表示（result）
-    if (v && v.phase === 'result' && counts){
-      const c = counts[p.id] || 0;
-      if (c > 0){
-        ui.countEl.textContent = '✉'.repeat(Math.min(8, c));
-        ui.countEl.classList.remove('hidden');
-      } else {
-        ui.countEl.classList.add('hidden');
-      }
-    } else {
-      ui.countEl.classList.add('hidden');
-    }
+    // 投票結果は、「誰がこの人に投票したか」を縦並びの吹き出しで表示
+    ui.countEl.classList.add('hidden');
+    const voterNames = votesByTarget.get(p.id) || [];
+    ui.voteResultEl.replaceChildren(...voterNames.map(name => {
+      const bubble = document.createElement('span');
+      bubble.className = 'vote-result-bubble';
+      bubble.textContent = name;
+      return bubble;
+    }));
+    ui.voteResultEl.classList.toggle('hidden', !showingVoteResult || voterNames.length === 0);
 
     // ミニカード表示：手札がある相手のみ（自分以外）
     const handData = state.hands?.[p.id];
