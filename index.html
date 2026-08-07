@@ -2194,6 +2194,14 @@ function shouldRevealRoleForPlayer(uid){
   const myRole = getMyRole();
   const targetHand = state.hands?.[uid];
   const targetRole = targetHand?.cards?.[0];
+  const revealPhase = state.reveal;
+
+  // 狼が占い師候補を選んだ後は、選択中に公開した狼カードを再公開しない。
+  // 投票結果など、wolfId を持たない別の全員公開には影響させない。
+  const isWolfAfterGuess =
+    revealPhase?.wolfId === uid &&
+    (revealPhase.phase === 'target' || revealPhase.phase === 'all');
+  if (isWolfAfterGuess) return false;
 
   if (targetRole === 'なにか' && isNextTurnPlayerOf(state.userId, uid)) return true;
 
